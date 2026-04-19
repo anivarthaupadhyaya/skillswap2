@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @Controller
 @RequestMapping("/requests")
@@ -23,12 +24,15 @@ public class RequestController {
     @GetMapping("/my-requests")
     public String myRequests(HttpSession session, Model model) {
         User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        model.addAttribute("currentUser", user);
         if (user != null) {
             if (user.getRole() == User.UserRole.MENTEE) {
                 model.addAttribute("requests", requestService.findByMenteeId(user.getUserId()));
             } else if (user.getRole() == User.UserRole.MENTOR) {
                 model.addAttribute("requests", requestService.findByMentorId(user.getUserId()));
             }
+        } else {
+            model.addAttribute("requests", List.of());
         }
         return "requests/my-requests";
     }
@@ -36,8 +40,11 @@ public class RequestController {
     @GetMapping("/pending")
     public String pendingRequests(HttpSession session, Model model) {
         User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        model.addAttribute("currentUser", user);
         if (user != null && user.getRole() == User.UserRole.MENTOR) {
             model.addAttribute("requests", requestService.findPendingRequestsForMentor(user.getUserId()));
+        } else {
+            model.addAttribute("requests", List.of());
         }
         return "requests/pending";
     }

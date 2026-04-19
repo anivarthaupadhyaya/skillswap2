@@ -27,6 +27,10 @@ public class UserService {
         return userRepository.findById(userId);
     }
 
+    public Optional<User> findByIdWithSkills(Long userId) {
+        return userRepository.findByUserId(userId);
+    }
+
     public List<User> findByRole(User.UserRole role) {
         return userRepository.findByRole(role);
     }

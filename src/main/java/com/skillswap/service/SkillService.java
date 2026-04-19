@@ -25,15 +25,11 @@ public class SkillService {
     }
 
     public List<Skill> findByCategory(Skill.SkillCategory category) {
-        return skillRepository.findByCategory(category);
+        return skillRepository.findByCategoriesContaining(category);
     }
 
     public List<Skill> findAllActiveSkills() {
         return skillRepository.findByIsActiveTrue();
-    }
-
-    public List<Skill> findByTaxonomy(Long taxonomyId) {
-        return skillRepository.findByTaxonomyTaxonomyId(taxonomyId);
     }
 
     public Skill updateSkill(Skill skill) {

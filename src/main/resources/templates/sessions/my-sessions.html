@@ -110,6 +110,10 @@
     </nav>
 
     <div class="container">
+        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTOR'}" style="margin-bottom: 1rem;">
+            <a href="/sessions/my-sessions/new-skill" class="btn">Create Skill</a>
+        </div>
+
         <div th:each="session : ${sessions}">
             <div class="session-card">
                 <div class="session-info">
