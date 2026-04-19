@@ -40,6 +40,9 @@
             <div class="row" th:if="${request.declineReason != null}">
                 <span class="label">Decline reason:</span> <span th:text="${request.declineReason}">Reason</span>
             </div>
+            <div class="row" th:if="${currentUser != null}">
+                <a class="btn" th:href="@{/requests/{id}/chat(id=${request.requestId})}">Open Chat</a>
+            </div>
 
             <div class="row" th:if="${currentUser != null and currentUser.role.name() == 'MENTOR' and request.status.name() == 'PROPOSED'}">
                 <form th:action="@{/requests/{id}/accept(id=${request.requestId})}" method="post" style="display:inline;">

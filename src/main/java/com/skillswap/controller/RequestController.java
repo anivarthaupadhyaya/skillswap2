@@ -1,9 +1,11 @@
 package com.skillswap.controller;
 
 import com.skillswap.entity.Request;
+import com.skillswap.entity.ChatMessage;
 import com.skillswap.entity.Notification;
 import com.skillswap.entity.Session;
 import com.skillswap.entity.User;
+import com.skillswap.service.ChatMessageService;
 import com.skillswap.service.NotificationService;
 import com.skillswap.service.RequestService;
 import com.skillswap.service.SessionService;
@@ -32,6 +34,9 @@ public class RequestController {
 
     @Autowired
     private SessionService sessionService;
+
+    @Autowired
+    private ChatMessageService chatMessageService;
 
     @GetMapping("/my-requests")
     public String myRequests(HttpSession session, Model model) {
@@ -71,6 +76,63 @@ public class RequestController {
             model.addAttribute("request", request);
         });
         return "requests/detail";
+    }
+
+    @GetMapping("/{requestId}/chat")
+    public String requestChat(@PathVariable Long requestId, HttpSession session, Model model) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+
+        Request request = requestService.findById(requestId).orElse(null);
+        if (request == null) {
+            return "redirect:/requests/my-requests";
+        }
+
+        boolean allowed = request.getMentor().getUserId().equals(user.getUserId())
+                || request.getMentee().getUserId().equals(user.getUserId());
+        if (!allowed) {
+            return "redirect:/requests/my-requests";
+        }
+
+        model.addAttribute("currentUser", user);
+        model.addAttribute("request", request);
+        model.addAttribute("messages", chatMessageService.findByRequest(requestId));
+        return "requests/chat";
+    }
+
+    @PostMapping("/{requestId}/chat")
+    public String sendMessage(
+            @PathVariable Long requestId,
+            @RequestParam String message,
+            HttpSession session) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+
+        Request request = requestService.findById(requestId).orElse(null);
+        if (request == null) {
+            return "redirect:/requests/my-requests";
+        }
+
+        boolean allowed = request.getMentor().getUserId().equals(user.getUserId())
+                || request.getMentee().getUserId().equals(user.getUserId());
+        if (!allowed) {
+            return "redirect:/requests/my-requests";
+        }
+
+        String text = message == null ? "" : message.trim();
+        if (!text.isEmpty()) {
+            ChatMessage chatMessage = new ChatMessage();
+            chatMessage.setRequest(request);
+            chatMessage.setSender(user);
+            chatMessage.setMessage(text);
+            chatMessageService.save(chatMessage);
+        }
+
+        return "redirect:/requests/" + requestId + "/chat";
     }
 
     @PostMapping("/{requestId}/accept")
