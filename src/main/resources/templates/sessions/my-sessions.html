@@ -94,6 +94,30 @@
         .btn-danger:hover {
             background-color: #c82333;
         }
+        .skill-block {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .skill-block h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        .skill-meta {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.75rem;
+        }
+        .mentee-list {
+            margin: 0;
+            padding-left: 1.2rem;
+            color: #333;
+        }
+        .mentee-list li {
+            margin-bottom: 0.4rem;
+        }
     </style>
 </head>
 <body>
@@ -114,22 +138,62 @@
             <a href="/sessions/my-sessions/new-skill" class="btn">Create Skill</a>
         </div>
 
-        <div th:each="session : ${sessions}">
+        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTOR'}" style="margin-bottom: 1.25rem;">
+            <h2 style="margin-bottom: 0.9rem; color:#333;">Skills I am giving</h2>
+            <div th:if="${mentorSkillGroups == null or mentorSkillGroups.isEmpty()}" class="skill-block">
+                No mentees have requested your skills yet.
+            </div>
+            <div th:each="entry : ${mentorSkillGroups}" class="skill-block">
+                <h3 th:text="${entry.key.skillName}">Skill Name</h3>
+                <div class="skill-meta">
+                    Categories:
+                    <span th:text="${entry.key.categoriesDisplay}">Category</span>
+                </div>
+                <ul class="mentee-list">
+                    <li th:each="req : ${entry.value}">
+                        <span th:text="${req.mentee.firstName + ' ' + req.mentee.lastName}">Mentee Name</span>
+                        -
+                        <span th:text="${req.status}">Status</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTEE'}" style="margin-bottom: 1.25rem;">
+            <h2 style="margin-bottom: 0.9rem; color:#333;">Skills I registered for</h2>
+            <div th:if="${menteeSkillRequests == null or menteeSkillRequests.isEmpty()}" class="skill-block">
+                You have not registered for any skills yet.
+            </div>
+            <div th:each="req : ${menteeSkillRequests}" class="skill-block">
+                <h3 th:text="${req.skillToLearn.skillName}">Skill Name</h3>
+                <div class="skill-meta">
+                    Mentor:
+                    <span th:text="${req.mentor.firstName + ' ' + req.mentor.lastName}">Mentor Name</span>
+                </div>
+                <div class="skill-meta">
+                    Status:
+                    <strong th:text="${req.status}">PROPOSED</strong>
+                </div>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 0.9rem; color:#333;">Scheduled sessions</h2>
+        <div th:each="sess : ${sessions}">
             <div class="session-card">
                 <div class="session-info">
-                    <h3>Session with <span th:text="${session.mentor.firstName}">Name</span></h3>
-                    <p><strong>Start:</strong> <span th:text="${#temporals.format(session.scheduledStart, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
-                    <p><strong>End:</strong> <span th:text="${#temporals.format(session.scheduledEnd, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
+                    <h3>Session with <span th:text="${sess.mentor.firstName}">Name</span></h3>
+                    <p><strong>Start:</strong> <span th:text="${#temporals.format(sess.scheduledStart, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
+                    <p><strong>End:</strong> <span th:text="${#temporals.format(sess.scheduledEnd, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
                 </div>
                 <div>
                     <span class="status" 
-                          th:class="'status ' + 'status-' + ${session.status.toString().toLowerCase()}"
-                          th:text="${session.status}">Status</span>
+                          th:class="'status ' + 'status-' + ${sess.status.toString().toLowerCase()}"
+                          th:text="${sess.status}">Status</span>
                 </div>
                 <div>
-                    <a th:href="@{/sessions/{id}(id=${session.sessionId})}" class="btn">View</a>
-                    <th:block th:if="${session.status.name() == 'SCHEDULED'}">
-                        <form th:action="@{/sessions/{id}/complete(id=${session.sessionId})}" method="post" style="display:inline;">
+                    <a th:href="@{/sessions/{id}(id=${sess.sessionId})}" class="btn">View</a>
+                    <th:block th:if="${sess.status.name() == 'SCHEDULED'}">
+                        <form th:action="@{/sessions/{id}/complete(id=${sess.sessionId})}" method="post" style="display:inline;">
                             <button type="submit" class="btn">Complete</button>
                         </form>
                     </th:block>

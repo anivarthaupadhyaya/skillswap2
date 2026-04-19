@@ -2,7 +2,9 @@ package com.skillswap.controller;
 
 import com.skillswap.entity.Session;
 import com.skillswap.entity.Skill;
+import com.skillswap.entity.Request;
 import com.skillswap.entity.User;
+import com.skillswap.service.RequestService;
 import com.skillswap.service.SkillService;
 import com.skillswap.service.SessionService;
 import com.skillswap.service.UserService;
@@ -13,7 +15,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Controller
@@ -29,6 +33,9 @@ public class SessionController {
     @Autowired
     private SkillService skillService;
 
+    @Autowired
+    private RequestService requestService;
+
     @GetMapping("/my-sessions")
     public String mySessions(HttpSession session, Model model) {
         User user = (session.getAttribute("user") instanceof User u) ? u : null;
@@ -36,6 +43,21 @@ public class SessionController {
         model.addAttribute("sessions", user != null
                 ? sessionService.findUpcomingSessions(user.getUserId())
                 : List.of());
+
+        if (user != null && user.getRole() == User.UserRole.MENTOR) {
+            List<Request> mentorRequests = requestService.findByMentorId(user.getUserId());
+            Map<Skill, List<Request>> mentorSkillGroups = new LinkedHashMap<>();
+            for (Request request : mentorRequests) {
+                mentorSkillGroups.computeIfAbsent(request.getSkillToLearn(), k -> new java.util.ArrayList<>())
+                        .add(request);
+            }
+            model.addAttribute("mentorSkillGroups", mentorSkillGroups);
+        }
+
+        if (user != null && user.getRole() == User.UserRole.MENTEE) {
+            model.addAttribute("menteeSkillRequests", requestService.findByMenteeId(user.getUserId()));
+        }
+
         return "sessions/my-sessions";
     }
 
