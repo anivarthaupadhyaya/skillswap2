@@ -1,0 +1,31 @@
+# SkillSwap Project Dependencies
+# Java: 17+
+# Build Tool: Maven 3.6+
+
+## Core Spring Boot Dependencies
+org.springframework.boot:spring-boot-starter-web:3.2.0
+org.springframework.boot:spring-boot-starter-data-jpa:3.2.0
+org.springframework.boot:spring-boot-starter-security:3.2.0
+org.springframework.boot:spring-boot-starter-thymeleaf:3.2.0
+
+## Database & ORM
+com.mysql:mysql-connector-j:8.2.0
+org.springframework.boot:spring-boot-starter-data-jpa:3.2.0
+
+## Security & Thymeleaf Integration
+org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.2.0
+org.springframework.boot:spring-boot-starter-security:3.2.0
+
+## Code Generation & Annotation Processing
+org.projectlombok:lombok:1.18.30
+
+## Validation
+org.springframework.boot:spring-boot-starter-validation:3.2.0
+
+## Testing
+org.springframework.boot:spring-boot-starter-test:3.2.0
+org.springframework.security:spring-security-test:3.2.0
+
+## To build the project, run:
+# mvn clean install
+# mvn spring-boot:run

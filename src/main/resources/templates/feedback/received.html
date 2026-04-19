@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - SkillSwap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+        }
+        nav {
+            background-color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 2rem;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 2rem;
+        }
+        .feedback-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1rem;
+        }
+        .feedback-header h3 {
+            color: #667eea;
+        }
+        .rating {
+            color: #ffc107;
+            font-size: 1.2rem;
+        }
+        .feedback-content {
+            margin-bottom: 1rem;
+        }
+        .feedback-labels {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stats {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .stats h2 {
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .stats p {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>My Feedback</h1>
+    </header>
+    
+    <nav>
+        <a href="/dashboard">Home</a>
+        <a href="/skills/catalog">Skills</a>
+        <a href="/requests/my-requests">Requests</a>
+        <a href="/sessions/my-sessions">Sessions</a>
+        <a href="/auth/logout">Logout</a>
+    </nav>
+
+    <div class="container">
+        <div th:if="${averageRating}">
+            <div class="stats">
+                <h2 th:text="${#numbers.formatDecimal(averageRating, 1, 2)}">4.5</h2>
+                <p>Average Rating</p>
+            </div>
+        </div>
+
+        <div th:each="feedback : ${feedbacks}">
+            <div class="feedback-card">
+                <div class="feedback-header">
+                    <h3>Feedback from <span th:text="${feedback.givenBy.firstName}">Name</span></h3>
+                    <div class="rating">
+                        <span th:repeat="i : ${#numbers.sequence(1, feedback.rating)}">★</span>
+                        <span th:repeat="i : ${#numbers.sequence(1, 5 - feedback.rating)}" style="color: #ddd;">★</span>
+                    </div>
+                </div>
+                <div class="feedback-content">
+                    <p th:text="${feedback.comment}">Feedback comment</p>
+                </div>
+                <div class="feedback-labels">
+                    <div class="label">
+                        <strong>Skill Development:</strong> 
+                        <span th:text="${feedback.skillDevelopmentRating} + '/5'">3/5</span>
+                    </div>
+                    <div class="label">
+                        <strong>Communication:</strong> 
+                        <span th:text="${feedback.communicationRating} + '/5'">4/5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${feedbacks.isEmpty()}" style="text-align: center; padding: 2rem;">
+            <p>No feedback received yet.</p>
+        </div>
+    </div>
+</body>
+</html>

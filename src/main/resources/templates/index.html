@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap - Corporate Knowledge Exchange Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-align: center;
+        }
+        nav {
+            background-color: #f4f4f4;
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+        }
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        nav a:hover {
+            color: #667eea;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+        }
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+        .hero p {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .btn:hover {
+            background-color: #764ba2;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        .feature-card {
+            background-color: #f9f9f9;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .feature-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>SkillSwap</h1>
+        <p>Corporate Knowledge Exchange Portal</p>
+    </header>
+    
+    <nav>
+        <a href="/">Home</a>
+        <a href="/auth/login">Login</a>
+        <a href="/auth/register">Register</a>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>Welcome to SkillSwap</h1>
+            <p>Foster a culture of continuous learning by connecting with peers for mutual skill development.</p>
+            <div class="button-group">
+                <a href="/auth/login" class="btn">Login</a>
+                <a href="/auth/register" class="btn btn-secondary">Register Now</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>🎓 Skill Mentorship</h3>
+                <p>Connect with mentors and peers to learn new skills through one-on-one mentorship sessions.</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 Peer Exchange</h3>
+                <p>Trade skills with colleagues - teach what you know and learn what you need.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📊 Growth Analytics</h3>
+                <p>Track your skill development journey with comprehensive analytics and feedback.</p>
+            </div>
+            <div class="feature-card">
+                <h3>📋 Skill Catalog</h3>
+                <p>Browse a comprehensive catalog of available skills and find the right mentor for your needs.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 SkillSwap. All rights reserved.</p>
+    </footer>
+</body>
+</html>

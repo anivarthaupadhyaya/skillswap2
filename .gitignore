@@ -1,0 +1,32 @@
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Build
+target/
+build/
+.gradle
+
+# Dependencies
+dependency-reduced-pom.xml
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+.env.local
+
+# IDE specific
+*.iml
+*.iws
+*.ipr
+
+# OS
+Thumbs.db
+.DS_Store
