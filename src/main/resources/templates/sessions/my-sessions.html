@@ -118,6 +118,27 @@
         .mentee-list li {
             margin-bottom: 0.4rem;
         }
+        .star-rating {
+            direction: rtl;
+            display: inline-flex;
+            gap: 0.15rem;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+        }
+        .star-rating input {
+            display: none;
+        }
+        .star-rating label {
+            font-size: 1.5rem;
+            color: #ccc;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label {
+            color: #f4b400;
+        }
     </style>
 </head>
 <body>
@@ -182,13 +203,22 @@
                     <form method="post" action="/sessions/rate-mentor">
                         <input type="hidden" name="requestId" th:value="${req.requestId}" />
                         <label style="font-weight:600;">Rate Mentor:</label>
-                        <select name="rating" required>
-                            <option value="1">1 Star</option>
-                            <option value="2">2 Stars</option>
-                            <option value="3">3 Stars</option>
-                            <option value="4">4 Stars</option>
-                            <option value="5">5 Stars</option>
-                        </select>
+                        <div class="star-rating">
+                            <input th:id="'star5-' + ${req.requestId}" type="radio" name="rating" value="5" required />
+                            <label th:for="'star5-' + ${req.requestId}" title="5 stars">&#9733;</label>
+
+                            <input th:id="'star4-' + ${req.requestId}" type="radio" name="rating" value="4" />
+                            <label th:for="'star4-' + ${req.requestId}" title="4 stars">&#9733;</label>
+
+                            <input th:id="'star3-' + ${req.requestId}" type="radio" name="rating" value="3" />
+                            <label th:for="'star3-' + ${req.requestId}" title="3 stars">&#9733;</label>
+
+                            <input th:id="'star2-' + ${req.requestId}" type="radio" name="rating" value="2" />
+                            <label th:for="'star2-' + ${req.requestId}" title="2 stars">&#9733;</label>
+
+                            <input th:id="'star1-' + ${req.requestId}" type="radio" name="rating" value="1" />
+                            <label th:for="'star1-' + ${req.requestId}" title="1 star">&#9733;</label>
+                        </div>
                         <input type="text" name="comment" placeholder="Optional comment" style="margin-left: .4rem; padding: .35rem;" />
                         <button type="submit" class="btn">Submit Rating</button>
                     </form>
