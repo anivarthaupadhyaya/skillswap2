@@ -2,8 +2,10 @@ package com.skillswap.controller;
 
 import com.skillswap.entity.Session;
 import com.skillswap.entity.Skill;
+import com.skillswap.entity.MentorRating;
 import com.skillswap.entity.Request;
 import com.skillswap.entity.User;
+import com.skillswap.service.MentorRatingService;
 import com.skillswap.service.RequestService;
 import com.skillswap.service.SkillService;
 import com.skillswap.service.SessionService;
@@ -15,6 +17,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,9 @@ public class SessionController {
     @Autowired
     private RequestService requestService;
 
+    @Autowired
+    private MentorRatingService mentorRatingService;
+
     @GetMapping("/my-sessions")
     public String mySessions(HttpSession session, Model model) {
         User user = (session.getAttribute("user") instanceof User u) ? u : null;
@@ -56,7 +62,17 @@ public class SessionController {
         }
 
         if (user != null && user.getRole() == User.UserRole.MENTEE) {
-            model.addAttribute("menteeSkillRequests", requestService.findByMenteeId(user.getUserId()));
+            List<Request> menteeRequests = requestService.findByMenteeId(user.getUserId());
+            model.addAttribute("menteeSkillRequests", menteeRequests);
+            Map<Long, Double> averageRatingsByRequest = new HashMap<>();
+            for (Request req : menteeRequests) {
+                averageRatingsByRequest.put(
+                        req.getRequestId(),
+                        mentorRatingService.getAverageForMentorAndSkill(
+                                req.getMentor().getUserId(),
+                                req.getSkillToLearn().getSkillId()));
+            }
+            model.addAttribute("averageRatingsByRequest", averageRatingsByRequest);
         }
 
         return "sessions/my-sessions";
@@ -96,6 +112,62 @@ public class SessionController {
         model.addAttribute("skill", skill);
         model.addAttribute("requestsForSkill", requestsForSkill);
         return "sessions/skill-mentees";
+    }
+
+    @PostMapping("/my-sessions/skill/{skillId}/delete")
+    public String deleteMentorSkill(
+            @PathVariable Long skillId,
+            HttpSession session) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null || user.getRole() != User.UserRole.MENTOR) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        Skill skill = skillService.findById(skillId).orElse(null);
+        if (skill == null || skill.getCreatedByMentor() == null
+                || !skill.getCreatedByMentor().getUserId().equals(user.getUserId())) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        skillService.deleteSkillCompletely(skillId);
+        return "redirect:/sessions/my-sessions";
+    }
+
+    @PostMapping("/rate-mentor")
+    public String rateMentor(
+            @RequestParam Long requestId,
+            @RequestParam Integer rating,
+            @RequestParam(required = false) String comment,
+            HttpSession session) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null || user.getRole() != User.UserRole.MENTEE) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        Request request = requestService.findById(requestId).orElse(null);
+        if (request == null || !request.getMentee().getUserId().equals(user.getUserId())) {
+            return "redirect:/sessions/my-sessions";
+        }
+        if (request.getStatus() != Request.RequestStatus.ACCEPTED
+                && request.getStatus() != Request.RequestStatus.COMPLETED) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        int safeRating = Math.max(1, Math.min(5, rating));
+        MentorRating existing = mentorRatingService.findByMentorMenteeSkill(
+                request.getMentor().getUserId(),
+                user.getUserId(),
+                request.getSkillToLearn().getSkillId());
+
+        MentorRating mentorRating = existing != null ? existing : new MentorRating();
+        mentorRating.setMentor(request.getMentor());
+        mentorRating.setMentee(user);
+        mentorRating.setSkill(request.getSkillToLearn());
+        mentorRating.setRating(safeRating);
+        mentorRating.setComment(comment);
+        mentorRatingService.createOrUpdate(mentorRating);
+
+        return "redirect:/sessions/my-sessions";
     }
 
     @PostMapping("/my-sessions/new-skill")

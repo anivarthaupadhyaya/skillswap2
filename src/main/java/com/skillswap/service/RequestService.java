@@ -31,6 +31,10 @@ public class RequestService {
         return requestRepository.findByMentorUserId(mentorId);
     }
 
+    public List<Request> findBySkillId(Long skillId) {
+        return requestRepository.findBySkillToLearnSkillId(skillId);
+    }
+
     public List<Request> findByStatus(Request.RequestStatus status) {
         return requestRepository.findByStatus(status);
     }

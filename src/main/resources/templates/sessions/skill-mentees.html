@@ -31,6 +31,9 @@
         <div class="card" th:if="${skill != null}">
             <h2 class="title" th:text="${skill.skillName}">Skill Name</h2>
             <div class="meta">Categories: <span th:text="${skill.categoriesDisplay}">Category</span></div>
+            <form th:action="@{/sessions/my-sessions/skill/{id}/delete(id=${skill.skillId})}" method="post" style="margin-top:.8rem;">
+                <button type="submit" style="border:none; background:#dc3545; color:#fff; padding:.45rem .75rem; border-radius:4px; cursor:pointer;">Delete Skill Completely</button>
+            </form>
         </div>
 
         <div class="card" th:if="${requestsForSkill == null or requestsForSkill.isEmpty()}">

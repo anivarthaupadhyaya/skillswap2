@@ -10,6 +10,7 @@ import java.util.List;
 public interface RequestRepository extends JpaRepository<Request, Long> {
     List<Request> findByMenteeUserId(Long menteeId);
     List<Request> findByMentorUserId(Long mentorId);
+    List<Request> findBySkillToLearnSkillId(Long skillId);
     List<Request> findByStatus(Request.RequestStatus status);
     List<Request> findByMenteeUserIdAndStatus(Long menteeId, Request.RequestStatus status);
     List<Request> findByMentorUserIdAndStatus(Long mentorId, Request.RequestStatus status);
