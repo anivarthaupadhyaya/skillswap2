@@ -153,6 +153,9 @@
                     Total mentee requests: <strong th:text="${entry.value.size()}">0</strong>
                 </div>
                 <a th:href="@{/sessions/my-sessions/skill/{id}(id=${entry.key.skillId})}" class="btn">View Mentees</a>
+                <form th:action="@{/sessions/my-sessions/skill/{id}/delete(id=${entry.key.skillId})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Delete Skill</button>
+                </form>
             </div>
         </div>
 
@@ -170,6 +173,25 @@
                 <div class="skill-meta">
                     Status:
                     <strong th:text="${req.status}">PROPOSED</strong>
+                </div>
+                <div class="skill-meta">
+                    Community mentor rating:
+                    <strong th:text="${#numbers.formatDecimal(averageRatingsByRequest[req.requestId],1,1)} + ' / 5'">0.0 / 5</strong>
+                </div>
+                <div th:if="${req.status.name() == 'ACCEPTED' or req.status.name() == 'COMPLETED'}" style="margin-top: 0.6rem;">
+                    <form method="post" action="/sessions/rate-mentor">
+                        <input type="hidden" name="requestId" th:value="${req.requestId}" />
+                        <label style="font-weight:600;">Rate Mentor:</label>
+                        <select name="rating" required>
+                            <option value="1">1 Star</option>
+                            <option value="2">2 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="5">5 Stars</option>
+                        </select>
+                        <input type="text" name="comment" placeholder="Optional comment" style="margin-left: .4rem; padding: .35rem;" />
+                        <button type="submit" class="btn">Submit Rating</button>
+                    </form>
                 </div>
             </div>
         </div>
