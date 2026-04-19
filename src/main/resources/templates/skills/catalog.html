@@ -114,6 +114,41 @@
             border-radius: 6px;
             margin-bottom: 1rem;
         }
+        .category-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+        .category-title {
+            color: #333;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.6rem;
+        }
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+        .category-preview-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 1.35rem;
+            min-height: 190px;
+        }
+        .category-preview-card h3 {
+            color: #667eea;
+            margin-bottom: 0.65rem;
+            font-size: 1.25rem;
+        }
+        .muted {
+            color: #666;
+            font-size: 1rem;
+            margin-bottom: 0.65rem;
+        }
     </style>
 </head>
 <body>
@@ -131,37 +166,57 @@
 
     <div class="container">
         <div th:if="${message}" class="message" th:text="${message}"></div>
-        <div class="filters">
+        <div class="filters" th:if="${selectedCategory != null}">
             <form method="get" action="/skills/catalog" style="display: flex; gap: 1rem;">
                 <select name="category" onchange="this.form.submit();">
                     <option value="">All Categories</option>
                     <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.displayName}"></option>
                 </select>
+                <a href="/skills/catalog" class="btn">Back to all categories</a>
             </form>
         </div>
 
-        <div class="skills-grid">
-            <div class="skill-card" th:each="skill : ${skills}">
-                <h3 th:text="${skill.skillName}">Skill Name</h3>
-                <span class="category" th:text="${skill.categoriesDisplay}">Categories</span>
-                <p th:text="${skill.description}">Description</p>
-                <a th:href="@{/skills/{id}(id=${skill.skillId})}" class="btn">View Details</a>
-
-                <th:block th:if="${currentUser != null and currentUser.role.name() == 'MENTEE'}">
-                    <th:block th:if="${registeredSkillIds == null or !registeredSkillIds.contains(skill.skillId)}">
-                        <form th:action="@{/skills/{id}/register(id=${skill.skillId})}" method="post" style="margin-top: 0.75rem;">
-                            <button type="submit" class="btn">Register</button>
-                        </form>
-                    </th:block>
-                    <th:block th:if="${registeredSkillIds != null and registeredSkillIds.contains(skill.skillId)}">
-                        <div style="margin-top: 0.75rem; color: #155724; font-weight: 600;">Registered</div>
-                    </th:block>
-                </th:block>
+        <div th:if="${selectedCategory == null}" class="category-grid">
+            <div class="category-preview-card" th:each="card : ${categoryCards}">
+                <h3 th:text="${card.displayName}">Category Name</h3>
+                <div class="muted">
+                    Skills: <strong th:text="${card.count}">0</strong>
+                </div>
+                <div th:if="${card.preview != null and !card.preview.isEmpty()}" class="muted">
+                    Preview:
+                    <span th:text="${#strings.listJoin(card.preview, ', ')}">Skill A, Skill B</span>
+                </div>
+                <div th:if="${card.preview == null or card.preview.isEmpty()}" class="muted">
+                    This category is empty.
+                </div>
+                <a th:href="@{/skills/catalog(category=${card.enumName})}" class="btn">Open Category</a>
             </div>
         </div>
 
-        <div th:if="${skills.isEmpty()}" style="text-align: center; padding: 2rem;">
-            <p>No skills available in this category.</p>
+        <div th:if="${selectedCategory != null}" class="category-card">
+            <h2 class="category-title" th:text="${selectedCategory.displayName}">Selected Category</h2>
+            <div class="skills-grid" th:if="${selectedCategorySkills != null and !selectedCategorySkills.isEmpty()}">
+                <div class="skill-card" th:each="skill : ${selectedCategorySkills}">
+                    <h3 th:text="${skill.skillName}">Skill Name</h3>
+                    <span class="category" th:text="${skill.categoriesDisplay}">Categories</span>
+                    <p th:text="${skill.description}">Description</p>
+                    <a th:href="@{/skills/{id}(id=${skill.skillId})}" class="btn">View Details</a>
+
+                    <th:block th:if="${currentUser != null and currentUser.role.name() == 'MENTEE'}">
+                        <th:block th:if="${registeredSkillIds == null or !registeredSkillIds.contains(skill.skillId)}">
+                            <form th:action="@{/skills/{id}/register(id=${skill.skillId})}" method="post" style="margin-top: 0.75rem;">
+                                <button type="submit" class="btn">Register</button>
+                            </form>
+                        </th:block>
+                        <th:block th:if="${registeredSkillIds != null and registeredSkillIds.contains(skill.skillId)}">
+                            <div style="margin-top: 0.75rem; color: #155724; font-weight: 600;">Registered</div>
+                        </th:block>
+                    </th:block>
+                </div>
+            </div>
+            <div th:if="${selectedCategorySkills == null or selectedCategorySkills.isEmpty()}" style="text-align: center; padding: 2rem;">
+                <p>This category is empty.</p>
+            </div>
         </div>
     </div>
 </body>

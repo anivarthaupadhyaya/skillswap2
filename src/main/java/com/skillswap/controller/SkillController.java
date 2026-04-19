@@ -14,6 +14,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -39,12 +45,61 @@ public class SkillController {
             @RequestParam(required = false) String msg,
             HttpSession session,
             Model model) {
+        Skill.SkillCategory selectedCategory = null;
+        List<Skill> selectedSkills;
         if (category != null && !category.isEmpty()) {
-            model.addAttribute("skills", skillService.findByCategory(Skill.SkillCategory.valueOf(category)));
+            selectedCategory = Skill.SkillCategory.valueOf(category);
+            selectedSkills = skillService.findByCategory(selectedCategory);
         } else {
-            model.addAttribute("skills", skillService.findAllActiveSkills());
+            selectedSkills = skillService.findAllActiveSkills();
         }
+
+        Map<Skill.SkillCategory, List<Skill>> skillsByCategory = new LinkedHashMap<>();
+        List<Skill> uncategorizedSkills = new ArrayList<>();
+        for (Skill.SkillCategory skillCategory : Skill.SkillCategory.values()) {
+            List<Skill> skillsInCategory = selectedSkills.stream()
+                    .filter(s -> s.getCategories() != null && s.getCategories().contains(skillCategory))
+                    .collect(Collectors.toCollection(ArrayList::new));
+            if (!skillsInCategory.isEmpty()) {
+                skillsByCategory.put(skillCategory, skillsInCategory);
+            }
+        }
+        uncategorizedSkills = selectedSkills.stream()
+                .filter(s -> s.getCategories() == null || s.getCategories().isEmpty())
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        model.addAttribute("skillsByCategory", skillsByCategory);
+        model.addAttribute("uncategorizedSkills", uncategorizedSkills);
+        model.addAttribute("skills", selectedSkills);
         model.addAttribute("categories", Skill.SkillCategory.values());
+        model.addAttribute("selectedCategory", selectedCategory);
+        model.addAttribute("selectedCategorySkills", selectedCategory != null ? selectedSkills : List.of());
+
+        List<Skill> allSkills = skillService.findAllActiveSkills();
+        Map<Skill.SkillCategory, Integer> categoryCounts = new HashMap<>();
+        Map<Skill.SkillCategory, List<String>> categoryPreviewNames = new HashMap<>();
+        List<Map<String, Object>> categoryCards = new ArrayList<>();
+        for (Skill.SkillCategory cat : Skill.SkillCategory.values()) {
+            List<Skill> inCategory = allSkills.stream()
+                    .filter(s -> s.getCategories() != null && s.getCategories().contains(cat))
+                    .sorted(Comparator.comparing(Skill::getSkillName, String.CASE_INSENSITIVE_ORDER))
+                    .collect(Collectors.toList());
+            int count = inCategory.size();
+            List<String> preview = inCategory.stream().limit(2).map(Skill::getSkillName).collect(Collectors.toList());
+            categoryCounts.put(cat, count);
+            categoryPreviewNames.put(cat, preview);
+
+            Map<String, Object> card = new HashMap<>();
+            card.put("enumName", cat.name());
+            card.put("displayName", cat.getDisplayName());
+            card.put("count", count);
+            card.put("preview", preview);
+            card.put("empty", count == 0);
+            categoryCards.add(card);
+        }
+        model.addAttribute("categoryCounts", categoryCounts);
+        model.addAttribute("categoryPreviewNames", categoryPreviewNames);
+        model.addAttribute("categoryCards", categoryCards);
 
         User currentUser = (session.getAttribute("user") instanceof User u) ? u : null;
         model.addAttribute("currentUser", currentUser);
