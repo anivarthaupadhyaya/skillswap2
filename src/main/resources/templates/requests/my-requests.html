@@ -138,6 +138,7 @@
                     <td th:text="${#temporals.format(request.requestedAt, 'dd-MMM-yyyy')}">Date</td>
                     <td>
                         <a th:href="@{/requests/{id}(id=${request.requestId})}" class="btn">View</a>
+                        <a th:href="@{/requests/{id}/chat(id=${request.requestId})}" class="btn">Chat</a>
                         <th:block th:if="${currentUser != null and currentUser.role.name() == 'MENTOR' and request.status.name() == 'PROPOSED'}">
                             <form th:action="@{/requests/{id}/accept(id=${request.requestId})}" method="post" style="display:inline;">
                                 <button type="submit" class="btn">Accept</button>
