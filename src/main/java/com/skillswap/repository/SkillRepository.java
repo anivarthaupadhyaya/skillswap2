@@ -10,7 +10,6 @@ import java.util.List;
 @Repository
 public interface SkillRepository extends JpaRepository<Skill, Long> {
     Optional<Skill> findBySkillName(String skillName);
-    List<Skill> findByCategory(Skill.SkillCategory category);
+    List<Skill> findByCategoriesContaining(Skill.SkillCategory category);
     List<Skill> findByIsActiveTrue();
-    List<Skill> findByTaxonomyTaxonomyId(Long taxonomyId);
 }

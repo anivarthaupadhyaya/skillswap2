@@ -134,10 +134,20 @@
         <div class="skills-grid">
             <div class="skill-card" th:each="skill : ${skills}">
                 <h3 th:text="${skill.skillName}">Skill Name</h3>
-                <span class="category" th:text="${skill.category}">Category</span>
+                <span class="category" th:text="${skill.categoriesDisplay}">Categories</span>
                 <p th:text="${skill.description}">Description</p>
-                <p>Proficiency Level: <strong th:text="${skill.proficiencyLevel} + '/5'">3/5</strong></p>
                 <a th:href="@{/skills/{id}(id=${skill.skillId})}" class="btn">View Details</a>
+
+                <th:block th:if="${currentUser != null and currentUser.role.name() == 'MENTEE'}">
+                    <th:block th:if="${registeredSkillIds == null or !registeredSkillIds.contains(skill.skillId)}">
+                        <form th:action="@{/skills/{id}/register(id=${skill.skillId})}" method="post" style="margin-top: 0.75rem;">
+                            <button type="submit" class="btn">Register</button>
+                        </form>
+                    </th:block>
+                    <th:block th:if="${registeredSkillIds != null and registeredSkillIds.contains(skill.skillId)}">
+                        <div style="margin-top: 0.75rem; color: #155724; font-weight: 600;">Registered</div>
+                    </th:block>
+                </th:block>
             </div>
         </div>
 

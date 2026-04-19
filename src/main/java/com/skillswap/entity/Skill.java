@@ -4,7 +4,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "skills")
@@ -23,12 +27,11 @@ public class Skill {
     @Column(nullable = false)
     private String description;
 
-    @Column(nullable = false)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "skill_categories", joinColumns = @JoinColumn(name = "skill_id"))
     @Enumerated(EnumType.STRING)
-    private SkillCategory category;
-
-    @Column(nullable = false)
-    private Integer proficiencyLevel; // 1-5 scale
+    @Column(name = "category", nullable = false)
+    private Set<SkillCategory> categories = new HashSet<>();
 
     @Column(nullable = false)
     private Boolean isActive = true;
@@ -39,11 +42,35 @@ public class Skill {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    @ManyToOne
-    @JoinColumn(name = "taxonomy_id", nullable = false)
-    private SkillTaxonomy taxonomy;
-
     public enum SkillCategory {
-        TECHNICAL, SOFT_SKILL, LANGUAGE, MANAGEMENT, OTHER
+        PHYSICAL_FITNESS,
+        CREATIVE_ARTISTIC,
+        INTELLECTUAL_LEARNING,
+        SOCIAL_CONNECTION,
+        RELAXATION_PASSIVE,
+        SPIRITUAL_INNER_GROWTH,
+        EXPLORATION_ADVENTURE,
+        COLLECTION_BUILDING;
+
+        public String getDisplayName() {
+            return switch (this) {
+                case PHYSICAL_FITNESS -> "Physical / Fitness";
+                case CREATIVE_ARTISTIC -> "Creative / Artistic";
+                case INTELLECTUAL_LEARNING -> "Intellectual / Learning";
+                case SOCIAL_CONNECTION -> "Social / Connection";
+                case RELAXATION_PASSIVE -> "Relaxation / Passive";
+                case SPIRITUAL_INNER_GROWTH -> "Spiritual / Inner Growth";
+                case EXPLORATION_ADVENTURE -> "Exploration / Adventure";
+                case COLLECTION_BUILDING -> "Collection / Building";
+            };
+        }
+    }
+
+    @Transient
+    public String getCategoriesDisplay() {
+        if (categories == null || categories.isEmpty()) return "";
+        return categories.stream()
+                .map(SkillCategory::getDisplayName)
+                .collect(Collectors.joining(", "));
     }
 }
