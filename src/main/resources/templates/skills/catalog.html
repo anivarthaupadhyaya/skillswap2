@@ -149,6 +149,12 @@
             font-size: 1rem;
             margin-bottom: 0.65rem;
         }
+        .category-description {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+        }
     </style>
 </head>
 <body>
@@ -179,16 +185,7 @@
         <div th:if="${selectedCategory == null}" class="category-grid">
             <div class="category-preview-card" th:each="card : ${categoryCards}">
                 <h3 th:text="${card.displayName}">Category Name</h3>
-                <div class="muted">
-                    Skills: <strong th:text="${card.count}">0</strong>
-                </div>
-                <div th:if="${card.preview != null and !card.preview.isEmpty()}" class="muted">
-                    Preview:
-                    <span th:text="${#strings.listJoin(card.preview, ', ')}">Skill A, Skill B</span>
-                </div>
-                <div th:if="${card.preview == null or card.preview.isEmpty()}" class="muted">
-                    This category is empty.
-                </div>
+                <div class="category-description" th:text="${card.description}">Category description</div>
                 <a th:href="@{/skills/catalog(category=${card.enumName})}" class="btn">Open Category</a>
             </div>
         </div>

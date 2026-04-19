@@ -95,6 +95,24 @@ public class SkillController {
             card.put("count", count);
             card.put("preview", preview);
             card.put("empty", count == 0);
+            card.put("description", switch (cat) {
+                case PHYSICAL_FITNESS ->
+                        "Activities involving body movement, strength, endurance, or coordination like gym workouts, sports, yoga, running, martial arts, and dancing.";
+                case CREATIVE_ARTISTIC ->
+                        "Hobbies focused on creating or expressing ideas through music, art, writing, design, filmmaking, photography, or any imaginative activity.";
+                case INTELLECTUAL_LEARNING ->
+                        "Activities that stimulate thinking and knowledge growth like reading, coding, problem-solving, studying subjects, puzzles, strategy games, and research.";
+                case SOCIAL_CONNECTION ->
+                        "Hobbies involving interaction with others such as group activities, networking, clubs, events, conversations, team sports, and building relationships.";
+                case RELAXATION_PASSIVE ->
+                        "Low-effort activities meant for relaxation and enjoyment like watching movies, listening to music, casual gaming, scrolling, or simply unwinding.";
+                case SPIRITUAL_INNER_GROWTH ->
+                        "Practices that improve inner peace and self-awareness such as meditation, prayer, mindfulness, reflection, philosophy, and connecting with deeper purpose.";
+                case EXPLORATION_ADVENTURE ->
+                        "Activities involving new experiences and environments like traveling, hiking, camping, road trips, discovering places, and stepping outside comfort zones.";
+                case COLLECTION_BUILDING ->
+                        "Hobbies focused on collecting items or constructing things like collectibles, models, DIY projects, assembling kits, organizing, and creating tangible outcomes.";
+            });
             categoryCards.add(card);
         }
         model.addAttribute("categoryCounts", categoryCounts);
