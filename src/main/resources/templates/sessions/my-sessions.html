@@ -149,13 +149,10 @@
                     Categories:
                     <span th:text="${entry.key.categoriesDisplay}">Category</span>
                 </div>
-                <ul class="mentee-list">
-                    <li th:each="req : ${entry.value}">
-                        <span th:text="${req.mentee.firstName + ' ' + req.mentee.lastName}">Mentee Name</span>
-                        -
-                        <span th:text="${req.status}">Status</span>
-                    </li>
-                </ul>
+                <div class="skill-meta">
+                    Total mentee requests: <strong th:text="${entry.value.size()}">0</strong>
+                </div>
+                <a th:href="@{/sessions/my-sessions/skill/{id}(id=${entry.key.skillId})}" class="btn">View Mentees</a>
             </div>
         </div>
 

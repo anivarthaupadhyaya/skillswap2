@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/sessions")
@@ -69,6 +70,32 @@ public class SessionController {
         }
         model.addAttribute("categories", Skill.SkillCategory.values());
         return "sessions/new-skill";
+    }
+
+    @GetMapping("/my-sessions/skill/{skillId}")
+    public String mentorSkillMentees(
+            @PathVariable Long skillId,
+            HttpSession session,
+            Model model) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null || user.getRole() != User.UserRole.MENTOR) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        Skill skill = skillService.findById(skillId).orElse(null);
+        if (skill == null) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        List<Request> requestsForSkill = requestService.findByMentorId(user.getUserId())
+                .stream()
+                .filter(r -> r.getSkillToLearn() != null && r.getSkillToLearn().getSkillId().equals(skillId))
+                .collect(Collectors.toList());
+
+        model.addAttribute("currentUser", user);
+        model.addAttribute("skill", skill);
+        model.addAttribute("requestsForSkill", requestsForSkill);
+        return "sessions/skill-mentees";
     }
 
     @PostMapping("/my-sessions/new-skill")
