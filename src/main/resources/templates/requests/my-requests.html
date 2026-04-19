@@ -90,6 +90,14 @@
         .btn:hover {
             background-color: #764ba2;
         }
+        .btn-danger {
+            background-color: #dc3545;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -121,7 +129,7 @@
                 <tr th:each="request : ${requests}">
                     <td th:text="${request.skillToLearn.skillName}">Skill</td>
                     <td th:text="${request.skillToTeach.skillName}">Skill</td>
-                    <td th:text="${request.mentor.firstName} + ' ' + ${request.mentor.lastName}">Name</td>
+                    <td th:text="${currentUser != null and currentUser.role.name() == 'MENTOR' ? request.mentee.firstName + ' ' + request.mentee.lastName : request.mentor.firstName + ' ' + request.mentor.lastName}">Name</td>
                     <td>
                         <span class="status" 
                               th:class="'status ' + 'status-' + ${request.status.toString().toLowerCase()}"
@@ -130,6 +138,20 @@
                     <td th:text="${#temporals.format(request.requestedAt, 'dd-MMM-yyyy')}">Date</td>
                     <td>
                         <a th:href="@{/requests/{id}(id=${request.requestId})}" class="btn">View</a>
+                        <th:block th:if="${currentUser != null and currentUser.role.name() == 'MENTOR' and request.status.name() == 'PROPOSED'}">
+                            <form th:action="@{/requests/{id}/accept(id=${request.requestId})}" method="post" style="display:inline;">
+                                <button type="submit" class="btn">Accept</button>
+                            </form>
+                            <form th:action="@{/requests/{id}/decline(id=${request.requestId})}" method="post" style="display:inline;">
+                                <input type="hidden" name="reason" value="Not available right now" />
+                                <button type="submit" class="btn btn-danger">Reject</button>
+                            </form>
+                        </th:block>
+                        <div th:if="${currentUser != null and currentUser.role.name() == 'MENTEE'}" style="margin-top: 0.4rem; color: #666; font-size: 0.85rem;">
+                            <span th:if="${request.status.name() == 'PROPOSED'}">Request sent to mentor.</span>
+                            <span th:if="${request.status.name() == 'ACCEPTED'}">Accepted by mentor. Session created.</span>
+                            <span th:if="${request.status.name() == 'DECLINED'}">Declined by mentor.</span>
+                        </div>
                     </td>
                 </tr>
             </tbody>

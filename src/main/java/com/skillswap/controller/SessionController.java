@@ -66,6 +66,7 @@ public class SessionController {
             skill.setSkillName(skillName);
             skill.setDescription(description);
             skill.setCategories(Set.of(category));
+            skill.setCreatedByMentor(user);
             skillService.createSkill(skill);
             return "redirect:/skills/catalog";
         } catch (Exception e) {

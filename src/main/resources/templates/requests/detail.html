@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Detail - SkillSwap</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; margin: 0; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; }
+        nav { background-color: white; padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; gap: 2rem; }
+        nav a { text-decoration: none; color: #333; font-weight: 500; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+        .card { background: white; border-radius: 8px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .row { margin-bottom: 0.8rem; color: #333; }
+        .label { font-weight: 600; }
+        .status { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 16px; font-size: 0.85rem; font-weight: 600; background: #e9ecef; }
+        .btn { display: inline-block; padding: 0.5rem 1rem; background-color: #667eea; color: white; text-decoration: none; border: none; border-radius: 4px; cursor: pointer; margin-right: 0.5rem; }
+        .btn-danger { background-color: #dc3545; }
+    </style>
+</head>
+<body>
+    <header><h1>Request Detail</h1></header>
+    <nav>
+        <a href="/dashboard">Home</a>
+        <a href="/requests/my-requests">Requests</a>
+        <a href="/sessions/my-sessions">Sessions</a>
+        <a href="/auth/logout">Logout</a>
+    </nav>
+
+    <div class="container">
+        <div class="card" th:if="${request != null}">
+            <div class="row"><span class="label">Skill to learn:</span> <span th:text="${request.skillToLearn.skillName}">Skill</span></div>
+            <div class="row"><span class="label">Mentee:</span> <span th:text="${request.mentee.firstName + ' ' + request.mentee.lastName}">Name</span></div>
+            <div class="row"><span class="label">Mentor:</span> <span th:text="${request.mentor.firstName + ' ' + request.mentor.lastName}">Name</span></div>
+            <div class="row"><span class="label">Message:</span> <span th:text="${request.message}">Message</span></div>
+            <div class="row">
+                <span class="label">Status:</span>
+                <span class="status" th:text="${request.status}">PROPOSED</span>
+            </div>
+            <div class="row" th:if="${request.declineReason != null}">
+                <span class="label">Decline reason:</span> <span th:text="${request.declineReason}">Reason</span>
+            </div>
+
+            <div class="row" th:if="${currentUser != null and currentUser.role.name() == 'MENTOR' and request.status.name() == 'PROPOSED'}">
+                <form th:action="@{/requests/{id}/accept(id=${request.requestId})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn">Accept</button>
+                </form>
+                <form th:action="@{/requests/{id}/decline(id=${request.requestId})}" method="post" style="display:inline;">
+                    <input type="hidden" name="reason" value="Not available right now" />
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card" th:if="${request == null}">
+            Request not found.
+        </div>
+    </div>
+</body>
+</html>
+

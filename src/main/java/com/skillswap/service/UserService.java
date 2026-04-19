@@ -35,6 +35,10 @@ public class UserService {
         return userRepository.findByRole(role);
     }
 
+    public Optional<User> findFirstActiveByRole(User.UserRole role) {
+        return userRepository.findFirstByRoleAndIsActiveTrue(role);
+    }
+
     public List<User> findByDepartment(String department) {
         return userRepository.findByDepartment(department);
     }
