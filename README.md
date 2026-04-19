@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SkillSwap - Corporate Knowledge Exchange Portal
 
 ## Project Overview
@@ -320,3 +321,6 @@ This project is created for educational purposes.
 
 **Last Updated**: March 2024
 **Version**: 1.0.0
+=======
+# skillswap2
+>>>>>>> 1c30149d9d5eaaec4f7db490a197dd1abe46a41b
