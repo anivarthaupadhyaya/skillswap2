@@ -94,14 +94,12 @@
     <div class="login-container">
         <h1>SkillSwap Login</h1>
         
-        <div th:if="${param.error}" class="error-message">
-            Invalid username or password
-        </div>
+        <div th:if="${error}" class="error-message" th:text="${error}"></div>
         
-        <form method="post" action="/auth/login">
+        <form method="post" action="/login">
             <div class="form-group">
-                <label for="username">Email:</label>
-                <input type="email" id="username" name="username" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
             </div>
             
             <div class="form-group">
