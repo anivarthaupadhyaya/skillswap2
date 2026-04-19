@@ -22,6 +22,10 @@ public class SessionService {
         return sessionRepository.findById(sessionId);
     }
 
+    public Optional<Session> findByRequestId(Long requestId) {
+        return sessionRepository.findByRequestRequestId(requestId);
+    }
+
     public List<Session> findByMenteeId(Long menteeId) {
         return sessionRepository.findByMenteeUserId(menteeId);
     }

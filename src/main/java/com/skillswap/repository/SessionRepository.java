@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SessionRepository extends JpaRepository<Session, Long> {
@@ -15,4 +16,5 @@ public interface SessionRepository extends JpaRepository<Session, Long> {
     List<Session> findByMenteeUserIdAndStatus(Long menteeId, Session.SessionStatus status);
     List<Session> findByMentorUserIdAndStatus(Long mentorId, Session.SessionStatus status);
     List<Session> findByScheduledStartBetween(LocalDateTime start, LocalDateTime end);
+    Optional<Session> findByRequestRequestId(Long requestId);
 }

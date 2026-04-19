@@ -13,6 +13,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     @EntityGraph(attributePaths = "skills")
     Optional<User> findByUserId(Long userId);
+    Optional<User> findFirstByRoleAndIsActiveTrue(User.UserRole role);
     List<User> findByRole(User.UserRole role);
     List<User> findByDepartment(String department);
     List<User> findByIsActiveTrue();

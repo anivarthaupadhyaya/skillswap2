@@ -33,6 +33,10 @@ public class Skill {
     @Column(name = "category", nullable = false)
     private Set<SkillCategory> categories = new HashSet<>();
 
+    @ManyToOne
+    @JoinColumn(name = "created_by_mentor_id")
+    private User createdByMentor;
+
     @Column(nullable = false)
     private Boolean isActive = true;
 

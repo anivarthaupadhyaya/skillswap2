@@ -106,6 +106,14 @@
         .btn:hover {
             background-color: #764ba2;
         }
+        .message {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border: 1px solid #badbcc;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -122,11 +130,12 @@
     </nav>
 
     <div class="container">
+        <div th:if="${message}" class="message" th:text="${message}"></div>
         <div class="filters">
             <form method="get" action="/skills/catalog" style="display: flex; gap: 1rem;">
                 <select name="category" onchange="this.form.submit();">
                     <option value="">All Categories</option>
-                    <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat}"></option>
+                    <option th:each="cat : ${categories}" th:value="${cat}" th:text="${cat.displayName}"></option>
                 </select>
             </form>
         </div>
