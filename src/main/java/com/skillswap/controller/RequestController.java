@@ -4,11 +4,11 @@ import com.skillswap.entity.Request;
 import com.skillswap.entity.User;
 import com.skillswap.service.RequestService;
 import com.skillswap.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.security.Principal;
 
 @Controller
 @RequestMapping("/requests")
@@ -21,8 +21,8 @@ public class RequestController {
     private UserService userService;
 
     @GetMapping("/my-requests")
-    public String myRequests(Principal principal, Model model) {
-        User user = userService.findByEmail(principal.getName()).orElse(null);
+    public String myRequests(HttpSession session, Model model) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
         if (user != null) {
             if (user.getRole() == User.UserRole.MENTEE) {
                 model.addAttribute("requests", requestService.findByMenteeId(user.getUserId()));
@@ -34,8 +34,8 @@ public class RequestController {
     }
 
     @GetMapping("/pending")
-    public String pendingRequests(Principal principal, Model model) {
-        User user = userService.findByEmail(principal.getName()).orElse(null);
+    public String pendingRequests(HttpSession session, Model model) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
         if (user != null && user.getRole() == User.UserRole.MENTOR) {
             model.addAttribute("requests", requestService.findPendingRequestsForMentor(user.getUserId()));
         }

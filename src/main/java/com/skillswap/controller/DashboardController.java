@@ -1,19 +1,21 @@
 package com.skillswap.controller;
 
+import com.skillswap.entity.User;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import java.security.Principal;
 
 @Controller
 @RequestMapping("/dashboard")
 public class DashboardController {
 
     @GetMapping
-    public String dashboard(Principal principal, Model model) {
-        if (principal != null) {
-            model.addAttribute("username", principal.getName());
+    public String dashboard(HttpSession session, Model model) {
+        Object sessionUser = session.getAttribute("user");
+        if (sessionUser instanceof User user) {
+            model.addAttribute("username", user.getEmail());
         }
         return "dashboard";
     }

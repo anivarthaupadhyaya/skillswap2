@@ -4,11 +4,11 @@ import com.skillswap.entity.Feedback;
 import com.skillswap.entity.User;
 import com.skillswap.service.FeedbackService;
 import com.skillswap.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import java.security.Principal;
 
 @Controller
 @RequestMapping("/feedback")
@@ -34,10 +34,10 @@ public class FeedbackController {
             @RequestParam Integer skillRating,
             @RequestParam Integer communicationRating,
             @RequestParam Long givenToUserId,
-            Principal principal,
+            HttpSession session,
             Model model) {
         try {
-            User givenBy = userService.findByEmail(principal.getName()).orElse(null);
+            User givenBy = (session.getAttribute("user") instanceof User u) ? u : null;
             User givenTo = userService.findById(givenToUserId).orElse(null);
 
             if (givenBy != null && givenTo != null) {
@@ -60,8 +60,8 @@ public class FeedbackController {
     }
 
     @GetMapping("/received")
-    public String receivedFeedback(Principal principal, Model model) {
-        User user = userService.findByEmail(principal.getName()).orElse(null);
+    public String receivedFeedback(HttpSession session, Model model) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
         if (user != null) {
             model.addAttribute("feedbacks", feedbackService.findByGivenTo(user.getUserId()));
             model.addAttribute("averageRating", feedbackService.getAverageRatingForUser(user.getUserId()));
