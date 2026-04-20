@@ -54,6 +54,6 @@ public class Session {
     private String sessionUrl;
 
     public enum SessionStatus {
-        SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED, RESCHEDULED
+        PENDING_MENTEE_CONFIRMATION, SCHEDULED, REJECTED_BY_MENTEE, IN_PROGRESS, COMPLETED, CANCELLED, RESCHEDULED
     }
 }

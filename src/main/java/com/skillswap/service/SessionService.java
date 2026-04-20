@@ -5,6 +5,7 @@ import com.skillswap.repository.SessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,17 @@ public class SessionService {
 
     public Session createSession(Session session) {
         session.setStatus(Session.SessionStatus.SCHEDULED);
+        return sessionRepository.save(session);
+    }
+
+    public Session createOrUpdateSlotForRequest(
+            Session existingSession,
+            LocalDateTime start,
+            Duration duration) {
+        Session session = existingSession != null ? existingSession : new Session();
+        session.setScheduledStart(start);
+        session.setScheduledEnd(start.plus(duration));
+        session.setStatus(Session.SessionStatus.PENDING_MENTEE_CONFIRMATION);
         return sessionRepository.save(session);
     }
 
@@ -39,12 +51,25 @@ public class SessionService {
     }
 
     public List<Session> findUpcomingSessions(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
         List<Session> mentorSessions = sessionRepository.findByMentorUserIdAndStatus(
             userId, Session.SessionStatus.SCHEDULED);
         mentorSessions.addAll(sessionRepository.findByMenteeUserIdAndStatus(
             userId, Session.SessionStatus.SCHEDULED));
         return mentorSessions;
+    }
+
+    public Session acceptByMentee(Long sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+        session.setStatus(Session.SessionStatus.SCHEDULED);
+        return sessionRepository.save(session);
+    }
+
+    public Session rejectByMentee(Long sessionId) {
+        Session session = sessionRepository.findById(sessionId)
+                .orElseThrow(() -> new RuntimeException("Session not found"));
+        session.setStatus(Session.SessionStatus.REJECTED_BY_MENTEE);
+        return sessionRepository.save(session);
     }
 
     public Session completeSession(Long sessionId) {

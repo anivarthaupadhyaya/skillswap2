@@ -5,3 +5,7 @@
 ALTER TABLE skills MODIFY COLUMN proficiency_level INT NULL;
 ALTER TABLE skills MODIFY COLUMN taxonomy_id BIGINT NULL;
 
+-- Session status grew beyond the old enum values.
+-- Keep it as VARCHAR so new statuses (like PENDING_MENTEE_CONFIRMATION) save safely.
+ALTER TABLE sessions MODIFY COLUMN status VARCHAR(64) NOT NULL;
+

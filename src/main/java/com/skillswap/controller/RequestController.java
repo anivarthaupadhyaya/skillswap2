@@ -3,12 +3,10 @@ package com.skillswap.controller;
 import com.skillswap.entity.Request;
 import com.skillswap.entity.ChatMessage;
 import com.skillswap.entity.Notification;
-import com.skillswap.entity.Session;
 import com.skillswap.entity.User;
 import com.skillswap.service.ChatMessageService;
 import com.skillswap.service.NotificationService;
 import com.skillswap.service.RequestService;
-import com.skillswap.service.SessionService;
 import com.skillswap.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Controller
@@ -31,9 +28,6 @@ public class RequestController {
 
     @Autowired
     private NotificationService notificationService;
-
-    @Autowired
-    private SessionService sessionService;
 
     @Autowired
     private ChatMessageService chatMessageService;
@@ -138,16 +132,6 @@ public class RequestController {
     @PostMapping("/{requestId}/accept")
     public String acceptRequest(@PathVariable Long requestId) {
         Request accepted = requestService.acceptRequest(requestId);
-
-        if (sessionService.findByRequestId(requestId).isEmpty()) {
-            Session session = new Session();
-            session.setRequest(accepted);
-            session.setMentee(accepted.getMentee());
-            session.setMentor(accepted.getMentor());
-            session.setScheduledStart(LocalDateTime.now().plusDays(1));
-            session.setScheduledEnd(LocalDateTime.now().plusDays(1).plusHours(1));
-            sessionService.createSession(session);
-        }
 
         Notification notification = new Notification();
         notification.setUser(accepted.getMentee());
