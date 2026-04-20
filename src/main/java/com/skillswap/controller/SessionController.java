@@ -170,14 +170,13 @@ public class SessionController {
         }
         sessionService.createOrUpdateSlotForRequest(existing, start, Duration.ofMinutes(safeMinutes), safeMode);
 
-        Notification notification = new Notification();
-        notification.setUser(request.getMentee());
-        notification.setTitle("New session slot proposed");
         String modeLabel = safeMode == Session.SessionMode.VIDEO_VISIT ? "Video Visit" : "In Person";
-        notification.setMessage("Mentor proposed a " + modeLabel + " slot for " + request.getSkillToLearn().getSkillName() + ".");
-        notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
-        notification.setRelatedEntityId(request.getRequestId());
-        notificationService.createNotification(notification);
+        notificationService.notifyUser(
+                request.getMentee(),
+                "New session slot proposed",
+                "Mentor proposed a " + modeLabel + " slot for " + request.getSkillToLearn().getSkillName() + ".",
+                Notification.NotificationType.SESSION_SCHEDULED,
+                request.getRequestId());
 
         return "redirect:/sessions/my-sessions/skill/" + request.getSkillToLearn().getSkillId();
     }
@@ -196,13 +195,12 @@ public class SessionController {
 
         if (sess.getStatus() == Session.SessionStatus.PENDING_MENTEE_CONFIRMATION) {
             Session updated = sessionService.acceptByMentee(sessionId);
-            Notification notification = new Notification();
-            notification.setUser(updated.getMentor());
-            notification.setTitle("Session slot accepted");
-            notification.setMessage(updated.getMentee().getFirstName() + " accepted your proposed slot.");
-            notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
-            notification.setRelatedEntityId(updated.getSessionId());
-            notificationService.createNotification(notification);
+            notificationService.notifyUser(
+                    updated.getMentor(),
+                    "Session slot accepted",
+                    updated.getMentee().getFirstName() + " accepted your proposed slot.",
+                    Notification.NotificationType.SESSION_UPDATED,
+                    updated.getSessionId());
         }
         return "redirect:/sessions/my-sessions";
     }
@@ -221,13 +219,12 @@ public class SessionController {
 
         if (sess.getStatus() == Session.SessionStatus.PENDING_MENTEE_CONFIRMATION) {
             Session updated = sessionService.rejectByMentee(sessionId);
-            Notification notification = new Notification();
-            notification.setUser(updated.getMentor());
-            notification.setTitle("Session slot rejected");
-            notification.setMessage(updated.getMentee().getFirstName() + " rejected your proposed slot.");
-            notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
-            notification.setRelatedEntityId(updated.getSessionId());
-            notificationService.createNotification(notification);
+            notificationService.notifyUser(
+                    updated.getMentor(),
+                    "Session slot rejected",
+                    updated.getMentee().getFirstName() + " rejected your proposed slot.",
+                    Notification.NotificationType.SESSION_UPDATED,
+                    updated.getSessionId());
         }
         return "redirect:/sessions/my-sessions";
     }
@@ -306,7 +303,18 @@ public class SessionController {
             skill.setDescription(description);
             skill.setCategories(Set.of(category));
             skill.setCreatedByMentor(user);
-            skillService.createSkill(skill);
+            Skill createdSkill = skillService.createSkill(skill);
+
+            for (User mentee : userService.findByRole(User.UserRole.MENTEE)) {
+                if (mentee != null && Boolean.TRUE.equals(mentee.getIsActive())) {
+                    notificationService.notifyUser(
+                            mentee,
+                            "New skill added",
+                            user.getFirstName() + " added a new skill: " + createdSkill.getSkillName() + ".",
+                            Notification.NotificationType.SKILL_CREATED,
+                            createdSkill.getSkillId());
+                }
+            }
             return "redirect:/skills/catalog";
         } catch (Exception e) {
             model.addAttribute("error", "Could not create skill: " + e.getMessage());
@@ -324,8 +332,18 @@ public class SessionController {
     }
 
     @PostMapping("/{sessionId}/complete")
-    public String completeSession(@PathVariable Long sessionId) {
-        sessionService.completeSession(sessionId);
+    public String completeSession(@PathVariable Long sessionId, HttpSession session) {
+        User actor = (session.getAttribute("user") instanceof User u) ? u : null;
+        Session updated = sessionService.completeSession(sessionId);
+        User recipient = actor != null && updated.getMentor().getUserId().equals(actor.getUserId())
+                ? updated.getMentee()
+                : updated.getMentor();
+        notificationService.notifyUser(
+                recipient,
+                "Session completed",
+                "Session for " + updated.getRequest().getSkillToLearn().getSkillName() + " was marked as completed.",
+                Notification.NotificationType.SESSION_COMPLETED,
+                updated.getSessionId());
         return "redirect:/sessions/my-sessions";
     }
 
@@ -333,17 +351,38 @@ public class SessionController {
     public String rescheduleSession(
             @PathVariable Long sessionId,
             @RequestParam String newStart,
-            @RequestParam String newEnd) {
+            @RequestParam String newEnd,
+            HttpSession session) {
+        User actor = (session.getAttribute("user") instanceof User u) ? u : null;
         DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
         LocalDateTime start = LocalDateTime.parse(newStart, formatter);
         LocalDateTime end = LocalDateTime.parse(newEnd, formatter);
-        sessionService.rescheduleSession(sessionId, start, end);
+        Session updated = sessionService.rescheduleSession(sessionId, start, end);
+        User recipient = actor != null && updated.getMentor().getUserId().equals(actor.getUserId())
+                ? updated.getMentee()
+                : updated.getMentor();
+        notificationService.notifyUser(
+                recipient,
+                "Session rescheduled",
+                "Session for " + updated.getRequest().getSkillToLearn().getSkillName() + " was rescheduled.",
+                Notification.NotificationType.SESSION_UPDATED,
+                updated.getSessionId());
         return "redirect:/sessions/my-sessions";
     }
 
     @PostMapping("/{sessionId}/cancel")
-    public String cancelSession(@PathVariable Long sessionId) {
-        sessionService.cancelSession(sessionId);
+    public String cancelSession(@PathVariable Long sessionId, HttpSession session) {
+        User actor = (session.getAttribute("user") instanceof User u) ? u : null;
+        Session updated = sessionService.cancelSession(sessionId);
+        User recipient = actor != null && updated.getMentor().getUserId().equals(actor.getUserId())
+                ? updated.getMentee()
+                : updated.getMentor();
+        notificationService.notifyUser(
+                recipient,
+                "Session cancelled",
+                "Session for " + updated.getRequest().getSkillToLearn().getSkillName() + " was cancelled.",
+                Notification.NotificationType.SESSION_UPDATED,
+                updated.getSessionId());
         return "redirect:/sessions/my-sessions";
     }
 }

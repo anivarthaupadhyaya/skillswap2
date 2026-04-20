@@ -1,6 +1,7 @@
 package com.skillswap.service;
 
 import com.skillswap.entity.Notification;
+import com.skillswap.entity.User;
 import com.skillswap.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,24 @@ public class NotificationService {
     private NotificationRepository notificationRepository;
 
     public Notification createNotification(Notification notification) {
+        return notificationRepository.save(notification);
+    }
+
+    public Notification notifyUser(
+            User user,
+            String title,
+            String message,
+            Notification.NotificationType notificationType,
+            Long relatedEntityId) {
+        if (user == null) {
+            return null;
+        }
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setNotificationType(notificationType);
+        notification.setRelatedEntityId(relatedEntityId);
         return notificationRepository.save(notification);
     }
 
