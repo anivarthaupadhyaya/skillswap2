@@ -7,7 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5; }
-        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; display:flex; justify-content:space-between; align-items:center; }
         nav { background-color: white; padding: 1rem 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; gap: 2rem; }
         nav a { text-decoration: none; color: #333; font-weight: 500; }
         .container { max-width: 800px; margin: 2rem auto; padding: 0 2rem; }
@@ -20,11 +20,16 @@
         .btn { display: inline-block; padding: 0.75rem 1.25rem; background-color: #667eea; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
         .btn:hover { background-color: #764ba2; }
         .hint { color: #666; font-size: 0.9rem; margin-top: 0.5rem; }
+        .bell-link { position: relative; color: white; text-decoration: none; font-size: 1.2rem; }
+        .bell-badge { position: absolute; top: -8px; right: -10px; background: #ff4d4f; color: #fff; border-radius: 999px; font-size: 0.7rem; min-width: 18px; text-align: center; padding: 1px 5px; }
     </style>
 </head>
 <body>
     <header>
         <h1>Create a new skill</h1>
+        <a href="/notifications" class="bell-link" title="Notifications">🔔
+            <span class="bell-badge" th:text="${unreadCount}">0</span>
+        </a>
     </header>
 
     <nav>
