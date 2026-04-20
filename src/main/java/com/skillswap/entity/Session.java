@@ -53,7 +53,15 @@ public class Session {
 
     private String sessionUrl;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private SessionMode sessionMode = SessionMode.IN_PERSON;
+
     public enum SessionStatus {
         PENDING_MENTEE_CONFIRMATION, SCHEDULED, REJECTED_BY_MENTEE, IN_PROGRESS, COMPLETED, CANCELLED, RESCHEDULED
+    }
+
+    public enum SessionMode {
+        IN_PERSON, VIDEO_VISIT
     }
 }

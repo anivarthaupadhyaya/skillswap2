@@ -48,6 +48,102 @@
             flex-wrap: wrap;
             align-items: center;
         }
+        .booking-card {
+            margin-top: .6rem;
+            padding: .9rem;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            background: #fafafa;
+            min-width: 320px;
+        }
+        .booking-title {
+            font-size: .95rem;
+            font-weight: 700;
+            margin-bottom: .55rem;
+            color: #333;
+        }
+        .segmented {
+            display: inline-flex;
+            background: #eceef3;
+            border-radius: 999px;
+            padding: .2rem;
+            margin-bottom: .6rem;
+        }
+        .segmented span {
+            padding: .35rem .75rem;
+            border-radius: 999px;
+            font-size: .82rem;
+            color: #5f6368;
+            cursor: pointer;
+        }
+        .segmented span.active {
+            background: #fff;
+            color: #2c2f36;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        }
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .55rem;
+            margin-bottom: .65rem;
+        }
+        .booking-grid label {
+            font-size: .8rem;
+            color: #555;
+            display: block;
+            margin-bottom: .2rem;
+        }
+        .booking-grid input,
+        .booking-grid select {
+            width: 100%;
+            border: 1px solid #d6d8de;
+            border-radius: 7px;
+            padding: .45rem .55rem;
+            font-size: .86rem;
+            background: #fff;
+        }
+        .time-sections {
+            display: grid;
+            gap: .45rem;
+        }
+        .time-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .35rem;
+        }
+        .time-label {
+            width: 100%;
+            font-size: .8rem;
+            color: #555;
+            margin-top: .15rem;
+        }
+        .time-chip {
+            border: 1px solid #d6d8de;
+            background: #fff;
+            border-radius: 7px;
+            padding: .35rem .55rem;
+            font-size: .82rem;
+            cursor: pointer;
+        }
+        .time-chip.active {
+            background: #eef2ff;
+            border-color: #667eea;
+            color: #2f43a8;
+            font-weight: 600;
+        }
+        .booking-actions {
+            margin-top: .7rem;
+            display: flex;
+            gap: .45rem;
+            align-items: center;
+        }
+        .booking-error {
+            color: #b42318;
+            font-size: .8rem;
+            margin-top: .45rem;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -84,6 +180,8 @@
                 <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledStart, 'dd-MMM-yyyy HH:mm')}">Start</strong>
                 -
                 <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledEnd, 'HH:mm')}">End</strong>
+                •
+                <strong th:text="${sessionByRequestId[req.requestId].sessionMode == T(com.skillswap.entity.Session.SessionMode).VIDEO_VISIT ? 'Video Visit' : 'In Person'}">In Person</strong>
                 (<span class="status" th:text="${sessionByRequestId[req.requestId].status}">PENDING_MENTEE_CONFIRMATION</span>)
             </div>
             <div class="meta action-row" th:if="${req.status.name() == 'ACCEPTED' or req.status.name() == 'COMPLETED'}">
@@ -94,25 +192,119 @@
                 <details class="slot-box">
                     <summary>Create Slot</summary>
                     <form class="slot-form"
+                          th:id="'slot-form-' + ${req.requestId}"
                           th:action="@{/sessions/my-sessions/slot/create}"
                           method="post">
                         <input type="hidden" name="requestId" th:value="${req.requestId}" />
-                        <label>Start:</label>
-                        <input type="datetime-local" name="startDateTime" required />
-                        <label>Duration:</label>
-                        <select name="durationMinutes" required>
-                            <option value="30">30 mins</option>
-                            <option value="45">45 mins</option>
-                            <option value="60" selected>60 mins</option>
-                            <option value="90">90 mins</option>
-                            <option value="120">120 mins</option>
-                        </select>
-                        <button type="submit" class="action-btn">Save Slot</button>
+                        <input type="hidden" name="startDateTime" th:id="'startDateTime-' + ${req.requestId}" required />
+                        <input type="hidden" name="sessionMode" th:id="'sessionMode-' + ${req.requestId}" value="IN_PERSON" />
+
+                        <div class="booking-card" th:attr="data-request-id=${req.requestId}">
+                            <div class="booking-title">Book appointment</div>
+                            <div class="segmented">
+                                <span class="active mode-toggle" data-mode="IN_PERSON">In Person</span>
+                                <span class="mode-toggle" data-mode="VIDEO_VISIT">Video Visit</span>
+                            </div>
+
+                            <div class="booking-grid">
+                                <div>
+                                    <label>Date</label>
+                                    <input type="date" th:id="'slotDate-' + ${req.requestId}" required />
+                                </div>
+                                <div>
+                                    <label>Duration</label>
+                                    <select name="durationMinutes" required>
+                                        <option value="30">30 mins</option>
+                                        <option value="45">45 mins</option>
+                                        <option value="60" selected>60 mins</option>
+                                        <option value="90">90 mins</option>
+                                        <option value="120">120 mins</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="time-sections">
+                                <div class="time-row">
+                                    <div class="time-label">Morning</div>
+                                    <button type="button" class="time-chip" data-time="08:00">08:00 am</button>
+                                    <button type="button" class="time-chip" data-time="09:00">09:00 am</button>
+                                    <button type="button" class="time-chip" data-time="10:00">10:00 am</button>
+                                    <button type="button" class="time-chip" data-time="11:00">11:00 am</button>
+                                </div>
+                                <div class="time-row">
+                                    <div class="time-label">Afternoon</div>
+                                    <button type="button" class="time-chip" data-time="13:00">01:00 pm</button>
+                                    <button type="button" class="time-chip" data-time="14:00">02:00 pm</button>
+                                    <button type="button" class="time-chip" data-time="15:00">03:00 pm</button>
+                                    <button type="button" class="time-chip" data-time="16:00">04:00 pm</button>
+                                </div>
+                                <div class="time-row">
+                                    <div class="time-label">Evening</div>
+                                    <button type="button" class="time-chip" data-time="18:00">06:00 pm</button>
+                                    <button type="button" class="time-chip" data-time="19:00">07:00 pm</button>
+                                    <button type="button" class="time-chip" data-time="20:00">08:00 pm</button>
+                                </div>
+                            </div>
+
+                            <div class="booking-actions">
+                                <button type="submit" class="action-btn">Save Slot</button>
+                            </div>
+                            <div class="booking-error" th:id="'slot-error-' + ${req.requestId}">
+                                Please select both date and time.
+                            </div>
+                        </div>
                     </form>
                 </details>
             </div>
         </div>
     </div>
+    <script>
+        (() => {
+            const cards = document.querySelectorAll(".booking-card");
+            cards.forEach(card => {
+                const requestId = card.getAttribute("data-request-id");
+                const form = document.getElementById(`slot-form-${requestId}`);
+                const dateInput = document.getElementById(`slotDate-${requestId}`);
+                const startHidden = document.getElementById(`startDateTime-${requestId}`);
+                const modeHidden = document.getElementById(`sessionMode-${requestId}`);
+                const errorEl = document.getElementById(`slot-error-${requestId}`);
+                const chips = card.querySelectorAll(".time-chip");
+                const modeToggles = card.querySelectorAll(".mode-toggle");
+                let selectedTime = "";
+
+                modeToggles.forEach(toggle => {
+                    toggle.addEventListener("click", () => {
+                        modeToggles.forEach(t => t.classList.remove("active"));
+                        toggle.classList.add("active");
+                        modeHidden.value = toggle.getAttribute("data-mode");
+                    });
+                });
+
+                chips.forEach(chip => {
+                    chip.addEventListener("click", () => {
+                        chips.forEach(c => c.classList.remove("active"));
+                        chip.classList.add("active");
+                        selectedTime = chip.getAttribute("data-time");
+                        if (errorEl) {
+                            errorEl.style.display = "none";
+                        }
+                    });
+                });
+
+                form.addEventListener("submit", (e) => {
+                    const selectedDate = dateInput.value;
+                    if (!selectedDate || !selectedTime) {
+                        e.preventDefault();
+                        if (errorEl) {
+                            errorEl.style.display = "block";
+                        }
+                        return;
+                    }
+                    startHidden.value = `${selectedDate}T${selectedTime}`;
+                });
+            });
+        })();
+    </script>
 </body>
 </html>
 

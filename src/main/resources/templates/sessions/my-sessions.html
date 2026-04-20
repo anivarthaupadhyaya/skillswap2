@@ -206,6 +206,8 @@
                     <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledStart, 'dd-MMM-yyyy HH:mm')}">Start</strong>
                     -
                     <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledEnd, 'HH:mm')}">End</strong>
+                    •
+                    <strong th:text="${sessionByRequestId[req.requestId].sessionMode == T(com.skillswap.entity.Session.SessionMode).VIDEO_VISIT ? 'Video Visit' : 'In Person'}">In Person</strong>
                     (<span th:text="${sessionByRequestId[req.requestId].status}">PENDING_MENTEE_CONFIRMATION</span>)
                 </div>
                 <div th:if="${sessionByRequestId != null and sessionByRequestId[req.requestId] != null and sessionByRequestId[req.requestId].status.name() == 'PENDING_MENTEE_CONFIRMATION'}" style="margin-top: .5rem;">
@@ -254,6 +256,7 @@
                     <h3>Session with <span th:text="${sess.mentor.firstName}">Name</span></h3>
                     <p><strong>Start:</strong> <span th:text="${#temporals.format(sess.scheduledStart, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
                     <p><strong>End:</strong> <span th:text="${#temporals.format(sess.scheduledEnd, 'dd-MMM-yyyy HH:mm')}">Date</span></p>
+                    <p><strong>Mode:</strong> <span th:text="${sess.sessionMode == T(com.skillswap.entity.Session.SessionMode).VIDEO_VISIT ? 'Video Visit' : 'In Person'}">In Person</span></p>
                 </div>
                 <div>
                     <span class="status" 

@@ -135,6 +135,7 @@ public class SessionController {
             @RequestParam Long requestId,
             @RequestParam String startDateTime,
             @RequestParam Integer durationMinutes,
+            @RequestParam(defaultValue = "IN_PERSON") String sessionMode,
             HttpSession session) {
         User user = (session.getAttribute("user") instanceof User u) ? u : null;
         if (user == null || user.getRole() != User.UserRole.MENTOR) {
@@ -161,12 +162,19 @@ public class SessionController {
             existing.setMentor(request.getMentor());
         }
 
-        sessionService.createOrUpdateSlotForRequest(existing, start, Duration.ofMinutes(safeMinutes));
+        Session.SessionMode safeMode;
+        try {
+            safeMode = Session.SessionMode.valueOf(sessionMode);
+        } catch (IllegalArgumentException ex) {
+            safeMode = Session.SessionMode.IN_PERSON;
+        }
+        sessionService.createOrUpdateSlotForRequest(existing, start, Duration.ofMinutes(safeMinutes), safeMode);
 
         Notification notification = new Notification();
         notification.setUser(request.getMentee());
         notification.setTitle("New session slot proposed");
-        notification.setMessage("Mentor proposed a slot for " + request.getSkillToLearn().getSkillName() + ".");
+        String modeLabel = safeMode == Session.SessionMode.VIDEO_VISIT ? "Video Visit" : "In Person";
+        notification.setMessage("Mentor proposed a " + modeLabel + " slot for " + request.getSkillToLearn().getSkillName() + ".");
         notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
         notification.setRelatedEntityId(request.getRequestId());
         notificationService.createNotification(notification);
