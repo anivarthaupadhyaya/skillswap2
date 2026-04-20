@@ -179,6 +179,13 @@ public class SkillController {
             notification.setNotificationType(Notification.NotificationType.REQUEST_RECEIVED);
             notification.setRelatedEntityId(created.getRequestId());
             notificationService.createNotification(notification);
+
+            notificationService.notifyUser(
+                    currentUser,
+                    "Request sent",
+                    "Your request for " + skill.getSkillName() + " was sent to " + mentor.getFirstName() + ".",
+                    Notification.NotificationType.REQUEST_SENT,
+                    created.getRequestId());
             return "redirect:/skills/catalog?msg=Request%20sent%20to%20mentor";
         }
 

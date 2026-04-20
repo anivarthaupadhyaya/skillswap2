@@ -124,6 +124,16 @@ public class RequestController {
             chatMessage.setSender(user);
             chatMessage.setMessage(text);
             chatMessageService.save(chatMessage);
+
+            User recipient = request.getMentor().getUserId().equals(user.getUserId())
+                    ? request.getMentee()
+                    : request.getMentor();
+            notificationService.notifyUser(
+                    recipient,
+                    "New chat message",
+                    user.getFirstName() + " sent a message for " + request.getSkillToLearn().getSkillName() + ".",
+                    Notification.NotificationType.CHAT_RECEIVED,
+                    request.getRequestId());
         }
 
         return "redirect:/requests/" + requestId + "/chat";
@@ -133,13 +143,12 @@ public class RequestController {
     public String acceptRequest(@PathVariable Long requestId) {
         Request accepted = requestService.acceptRequest(requestId);
 
-        Notification notification = new Notification();
-        notification.setUser(accepted.getMentee());
-        notification.setTitle("Request accepted");
-        notification.setMessage("Your request for " + accepted.getSkillToLearn().getSkillName() + " was accepted.");
-        notification.setNotificationType(Notification.NotificationType.REQUEST_ACCEPTED);
-        notification.setRelatedEntityId(accepted.getRequestId());
-        notificationService.createNotification(notification);
+        notificationService.notifyUser(
+                accepted.getMentee(),
+                "Request accepted",
+                "Your request for " + accepted.getSkillToLearn().getSkillName() + " was accepted.",
+                Notification.NotificationType.REQUEST_ACCEPTED,
+                accepted.getRequestId());
 
         return "redirect:/requests/my-requests";
     }
@@ -150,13 +159,12 @@ public class RequestController {
             @RequestParam String reason) {
         Request declined = requestService.declineRequest(requestId, reason);
 
-        Notification notification = new Notification();
-        notification.setUser(declined.getMentee());
-        notification.setTitle("Request declined");
-        notification.setMessage("Your request for " + declined.getSkillToLearn().getSkillName() + " was declined.");
-        notification.setNotificationType(Notification.NotificationType.REQUEST_DECLINED);
-        notification.setRelatedEntityId(declined.getRequestId());
-        notificationService.createNotification(notification);
+        notificationService.notifyUser(
+                declined.getMentee(),
+                "Request declined",
+                "Your request for " + declined.getSkillToLearn().getSkillName() + " was declined.",
+                Notification.NotificationType.REQUEST_DECLINED,
+                declined.getRequestId());
 
         return "redirect:/requests/my-requests";
     }
