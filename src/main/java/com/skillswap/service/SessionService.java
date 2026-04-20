@@ -22,10 +22,12 @@ public class SessionService {
     public Session createOrUpdateSlotForRequest(
             Session existingSession,
             LocalDateTime start,
-            Duration duration) {
+            Duration duration,
+            Session.SessionMode sessionMode) {
         Session session = existingSession != null ? existingSession : new Session();
         session.setScheduledStart(start);
         session.setScheduledEnd(start.plus(duration));
+        session.setSessionMode(sessionMode == null ? Session.SessionMode.IN_PERSON : sessionMode);
         session.setStatus(Session.SessionStatus.PENDING_MENTEE_CONFIRMATION);
         return sessionRepository.save(session);
     }
