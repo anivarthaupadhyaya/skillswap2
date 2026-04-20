@@ -45,6 +45,12 @@
             <div class="meta">Requested at: <span th:text="${#temporals.format(req.requestedAt, 'dd-MMM-yyyy HH:mm')}">Date</span></div>
             <div class="meta">Message: <span th:text="${req.message}">Message</span></div>
             <div class="meta">Status: <span class="status" th:text="${req.status}">PROPOSED</span></div>
+            <div class="meta" th:if="${req.status.name() == 'ACCEPTED' or req.status.name() == 'COMPLETED'}">
+                <a th:href="@{/requests/{id}/chat(id=${req.requestId})}"
+                   style="display:inline-block; text-decoration:none; background:#667eea; color:#fff; padding:.45rem .75rem; border-radius:4px;">
+                    Open Chat
+                </a>
+            </div>
         </div>
     </div>
 </body>
