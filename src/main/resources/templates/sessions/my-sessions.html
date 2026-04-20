@@ -190,6 +190,12 @@
                 <div class="skill-meta">
                     Mentor:
                     <span th:text="${req.mentor.firstName + ' ' + req.mentor.lastName}">Mentor Name</span>
+                    <a th:if="${req.status.name() == 'ACCEPTED' or req.status.name() == 'COMPLETED'}"
+                       th:href="@{/requests/{id}/chat(id=${req.requestId})}"
+                       class="btn"
+                       style="margin-left: .6rem; padding: .3rem .7rem;">
+                        Chat
+                    </a>
                 </div>
                 <div class="skill-meta">
                     Status:
