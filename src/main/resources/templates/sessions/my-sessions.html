@@ -201,6 +201,21 @@
                     Status:
                     <strong th:text="${req.status}">PROPOSED</strong>
                 </div>
+                <div class="skill-meta" th:if="${sessionByRequestId != null and sessionByRequestId[req.requestId] != null}">
+                    Proposed slot:
+                    <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledStart, 'dd-MMM-yyyy HH:mm')}">Start</strong>
+                    -
+                    <strong th:text="${#temporals.format(sessionByRequestId[req.requestId].scheduledEnd, 'HH:mm')}">End</strong>
+                    (<span th:text="${sessionByRequestId[req.requestId].status}">PENDING_MENTEE_CONFIRMATION</span>)
+                </div>
+                <div th:if="${sessionByRequestId != null and sessionByRequestId[req.requestId] != null and sessionByRequestId[req.requestId].status.name() == 'PENDING_MENTEE_CONFIRMATION'}" style="margin-top: .5rem;">
+                    <form th:action="@{/sessions/my-sessions/slot/{id}/accept(id=${sessionByRequestId[req.requestId].sessionId})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn">Accept Slot</button>
+                    </form>
+                    <form th:action="@{/sessions/my-sessions/slot/{id}/reject(id=${sessionByRequestId[req.requestId].sessionId})}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-danger">Reject Slot</button>
+                    </form>
+                </div>
                 <div class="skill-meta">
                     Community mentor rating:
                     <strong th:text="${#numbers.formatDecimal(averageRatingsByRequest[req.requestId],1,1)} + ' / 5'">0.0 / 5</strong>

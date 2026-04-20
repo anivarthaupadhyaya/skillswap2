@@ -3,9 +3,11 @@ package com.skillswap.controller;
 import com.skillswap.entity.Session;
 import com.skillswap.entity.Skill;
 import com.skillswap.entity.MentorRating;
+import com.skillswap.entity.Notification;
 import com.skillswap.entity.Request;
 import com.skillswap.entity.User;
 import com.skillswap.service.MentorRatingService;
+import com.skillswap.service.NotificationService;
 import com.skillswap.service.RequestService;
 import com.skillswap.service.SkillService;
 import com.skillswap.service.SessionService;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -43,6 +46,9 @@ public class SessionController {
     @Autowired
     private MentorRatingService mentorRatingService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     @GetMapping("/my-sessions")
     public String mySessions(HttpSession session, Model model) {
         User user = (session.getAttribute("user") instanceof User u) ? u : null;
@@ -65,14 +71,18 @@ public class SessionController {
             List<Request> menteeRequests = requestService.findByMenteeId(user.getUserId());
             model.addAttribute("menteeSkillRequests", menteeRequests);
             Map<Long, Double> averageRatingsByRequest = new HashMap<>();
+            Map<Long, Session> sessionByRequestId = new HashMap<>();
             for (Request req : menteeRequests) {
                 averageRatingsByRequest.put(
                         req.getRequestId(),
                         mentorRatingService.getAverageForMentorAndSkill(
                                 req.getMentor().getUserId(),
                                 req.getSkillToLearn().getSkillId()));
+                sessionService.findByRequestId(req.getRequestId())
+                        .ifPresent(sess -> sessionByRequestId.put(req.getRequestId(), sess));
             }
             model.addAttribute("averageRatingsByRequest", averageRatingsByRequest);
+            model.addAttribute("sessionByRequestId", sessionByRequestId);
         }
 
         return "sessions/my-sessions";
@@ -107,11 +117,111 @@ public class SessionController {
                 .stream()
                 .filter(r -> r.getSkillToLearn() != null && r.getSkillToLearn().getSkillId().equals(skillId))
                 .collect(Collectors.toList());
+        Map<Long, Session> sessionByRequestId = new HashMap<>();
+        for (Request req : requestsForSkill) {
+            sessionService.findByRequestId(req.getRequestId())
+                    .ifPresent(sess -> sessionByRequestId.put(req.getRequestId(), sess));
+        }
 
         model.addAttribute("currentUser", user);
         model.addAttribute("skill", skill);
         model.addAttribute("requestsForSkill", requestsForSkill);
+        model.addAttribute("sessionByRequestId", sessionByRequestId);
         return "sessions/skill-mentees";
+    }
+
+    @PostMapping("/my-sessions/slot/create")
+    public String createSlotForMentee(
+            @RequestParam Long requestId,
+            @RequestParam String startDateTime,
+            @RequestParam Integer durationMinutes,
+            HttpSession session) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null || user.getRole() != User.UserRole.MENTOR) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        Request request = requestService.findById(requestId).orElse(null);
+        if (request == null || !request.getMentor().getUserId().equals(user.getUserId())) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        if (request.getStatus() != Request.RequestStatus.ACCEPTED
+                && request.getStatus() != Request.RequestStatus.COMPLETED) {
+            return "redirect:/sessions/my-sessions/skill/" + request.getSkillToLearn().getSkillId();
+        }
+
+        int safeMinutes = Math.max(15, Math.min(480, durationMinutes == null ? 60 : durationMinutes));
+        LocalDateTime start = LocalDateTime.parse(startDateTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        Session existing = sessionService.findByRequestId(requestId).orElse(null);
+        if (existing == null) {
+            existing = new Session();
+            existing.setRequest(request);
+            existing.setMentee(request.getMentee());
+            existing.setMentor(request.getMentor());
+        }
+
+        sessionService.createOrUpdateSlotForRequest(existing, start, Duration.ofMinutes(safeMinutes));
+
+        Notification notification = new Notification();
+        notification.setUser(request.getMentee());
+        notification.setTitle("New session slot proposed");
+        notification.setMessage("Mentor proposed a slot for " + request.getSkillToLearn().getSkillName() + ".");
+        notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
+        notification.setRelatedEntityId(request.getRequestId());
+        notificationService.createNotification(notification);
+
+        return "redirect:/sessions/my-sessions/skill/" + request.getSkillToLearn().getSkillId();
+    }
+
+    @PostMapping("/my-sessions/slot/{sessionId}/accept")
+    public String acceptSlotByMentee(@PathVariable Long sessionId, HttpSession session) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null || user.getRole() != User.UserRole.MENTEE) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        Session sess = sessionService.findById(sessionId).orElse(null);
+        if (sess == null || !sess.getMentee().getUserId().equals(user.getUserId())) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        if (sess.getStatus() == Session.SessionStatus.PENDING_MENTEE_CONFIRMATION) {
+            Session updated = sessionService.acceptByMentee(sessionId);
+            Notification notification = new Notification();
+            notification.setUser(updated.getMentor());
+            notification.setTitle("Session slot accepted");
+            notification.setMessage(updated.getMentee().getFirstName() + " accepted your proposed slot.");
+            notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
+            notification.setRelatedEntityId(updated.getSessionId());
+            notificationService.createNotification(notification);
+        }
+        return "redirect:/sessions/my-sessions";
+    }
+
+    @PostMapping("/my-sessions/slot/{sessionId}/reject")
+    public String rejectSlotByMentee(@PathVariable Long sessionId, HttpSession session) {
+        User user = (session.getAttribute("user") instanceof User u) ? u : null;
+        if (user == null || user.getRole() != User.UserRole.MENTEE) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        Session sess = sessionService.findById(sessionId).orElse(null);
+        if (sess == null || !sess.getMentee().getUserId().equals(user.getUserId())) {
+            return "redirect:/sessions/my-sessions";
+        }
+
+        if (sess.getStatus() == Session.SessionStatus.PENDING_MENTEE_CONFIRMATION) {
+            Session updated = sessionService.rejectByMentee(sessionId);
+            Notification notification = new Notification();
+            notification.setUser(updated.getMentor());
+            notification.setTitle("Session slot rejected");
+            notification.setMessage(updated.getMentee().getFirstName() + " rejected your proposed slot.");
+            notification.setNotificationType(Notification.NotificationType.SESSION_SCHEDULED);
+            notification.setRelatedEntityId(updated.getSessionId());
+            notificationService.createNotification(notification);
+        }
+        return "redirect:/sessions/my-sessions";
     }
 
     @PostMapping("/my-sessions/skill/{skillId}/delete")
