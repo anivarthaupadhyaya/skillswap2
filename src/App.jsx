@@ -1,71 +1,68 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { matchRoute, Redirect, usePath } from './router';
+import { useStore } from './data/store';
+import Layout from './components/Layout';
+import { ToastProvider } from './components/ui';
+import Landing from './pages/Landing';
+import { Login, Register } from './pages/Auth';
+import Dashboard from './pages/Dashboard';
+import Catalog from './pages/Catalog';
+import Requests from './pages/Requests';
+import Chat from './pages/Chat';
+import Sessions, { NewSkill, SkillMentees } from './pages/Sessions';
+import { Feedback, NotFound, Notifications } from './pages/Inbox';
 
-function App() {
-  const [apiStatus, setApiStatus] = useState('Loading...');
-  const [skills, setSkills] = useState([]);
+const PUBLIC = [
+  ['/', Landing],
+  ['/login', Login],
+  ['/register', Register]
+];
+
+const PRIVATE = [
+  ['/dashboard', Dashboard],
+  ['/skills', Catalog],
+  ['/skills/:category', Catalog],
+  ['/requests', Requests],
+  ['/requests/:id/chat', Chat],
+  ['/sessions', Sessions],
+  ['/sessions/new-skill', NewSkill],
+  ['/sessions/skill/:id', SkillMentees],
+  ['/notifications', Notifications],
+  ['/feedback', Feedback]
+];
+
+const TITLES = {
+  '/': 'SkillSwap · Corporate Knowledge Exchange',
+  '/login': 'Log in · SkillSwap',
+  '/register': 'Register · SkillSwap'
+};
+
+export default function App() {
+  const path = usePath();
+  const loggedIn = useStore((s) => s.currentUserId != null && s.users.some((u) => u.id === s.currentUserId));
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const response = await fetch('/api/skills');
-        const data = await response.json();
-        setApiStatus(data.message || 'API connected');
-        setSkills(data.skills || []);
-      } catch (error) {
-        setApiStatus('API unavailable in local preview');
-        setSkills([
-          { name: 'Java', category: 'Backend' },
-          { name: 'React', category: 'Frontend' },
-          { name: 'Node.js', category: 'API' }
-        ]);
-      }
-    }
+    const section = path.split('/')[1];
+    document.title = TITLES[path] || `${section ? section.charAt(0).toUpperCase() + section.slice(1).replace('-', ' ') : 'Home'} · SkillSwap`;
+  }, [path]);
 
-    loadData();
-  }, []);
+  let content;
+  const pub = matchRoute(PUBLIC, path);
+  const priv = matchRoute(PRIVATE, path);
 
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand">SkillSwap</div>
-        <nav>
-          <a href="#">Home</a>
-          <a href="#">Skills</a>
-          <a href="#">Mentors</a>
-          <a href="#">Requests</a>
-        </nav>
-      </header>
+  if (pub) {
+    content = loggedIn ? <Redirect to="/dashboard" /> : <pub.component params={pub.params} />;
+  } else if (priv) {
+    content = loggedIn ? (
+      <Layout>
+        <priv.component key={path} params={priv.params} />
+      </Layout>
+    ) : (
+      <Redirect to="/login" />
+    );
+  } else {
+    content = loggedIn ? <Layout><NotFound /></Layout> : <NotFound />;
+  }
 
-      <main className="container">
-        <section className="hero">
-          <span className="badge">Vercel-ready</span>
-          <h1>Corporate knowledge exchange</h1>
-          <p>
-            SkillSwap helps teams share, learn, and exchange skills across mentorship and peer learning.
-          </p>
-          <div className="cta-row">
-            <button>Find a mentor</button>
-            <button className="secondary">Explore skills</button>
-          </div>
-        </section>
-
-        <section className="panel">
-          <h2>System status</h2>
-          <p className="status">{apiStatus}</p>
-        </section>
-
-        <section className="skills-grid">
-          {skills.map((skill) => (
-            <article key={skill.name} className="skill-card">
-              <div className="skill-icon">✦</div>
-              <h3>{skill.name}</h3>
-              <p>{skill.category}</p>
-            </article>
-          ))}
-        </section>
-      </main>
-    </div>
-  );
+  return <ToastProvider>{content}</ToastProvider>;
 }
-
-export default App;
