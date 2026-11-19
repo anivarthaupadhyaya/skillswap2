@@ -1,5 +1,41 @@
-<<<<<<< HEAD
 # SkillSwap - Corporate Knowledge Exchange Portal
+
+## 🚀 Live demo frontend (Vercel)
+
+The root of this repo is a **React + Vite** app that is deployed to Vercel. It
+re-creates every page of the Spring Boot app (catalog, requests, slot booking,
+chat, notifications, feedback) and runs on demo data stored in the browser, so
+no server or database is needed.
+
+**Demo accounts** (or use the one-click buttons on the login page):
+
+| Role   | Email                  | Password |
+|--------|------------------------|----------|
+| Mentee | `mentee@skillswap.dev` | `demo123` |
+| Mentor | `mentor@skillswap.dev` | `demo123` |
+
+Use **Reset demo data** in the user menu to restore the original data.
+
+### Run locally
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build in dist/
+```
+
+### Deploy to Vercel
+
+1. Push this repo to GitHub.
+2. In Vercel, go to **Add New → Project** and import the repo. The settings come from `vercel.json`
+   (framework: Vite, output: `dist`), so you don't need to change anything.
+3. Click **Deploy**. Every later push to `main` redeploys automatically.
+
+The Java backend under `src/main/` is kept for reference and is excluded from
+the Vercel deployment via `.vercelignore`.
+
+---
+
 
 ## Project Overview
 
@@ -320,7 +356,3 @@ This project is created for educational purposes.
 ---
 
 **Last Updated**: March 2024
-**Version**: 1.0.0
-=======
-# skillswap2
->>>>>>> 1c30149d9d5eaaec4f7db490a197dd1abe46a41b
