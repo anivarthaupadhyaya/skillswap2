@@ -1,33 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, navigate, usePath } from '../router';
 import { currentUser, fullName, logout, resetDemo, useStore } from '../data/store';
-import { Avatar, useToast } from './ui';
+import { Avatar, Icon, useToast } from './ui';
 
 export function Brand({ to = '/' }) {
   return (
     <Link to={to} className="brand">
-      <span className="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M7 7h11l-3-3M17 17H6l3 3" />
-        </svg>
-      </span>
-      SkillSwap
+      <span className="brand-mark" aria-hidden="true">S</span>
+      <span>SkillSwap</span>
     </Link>
   );
 }
 
 const NAV = [
-  ['/dashboard', 'Home'],
-  ['/skills', 'Skill Catalog'],
-  ['/requests', 'Requests'],
-  ['/sessions', 'Sessions'],
-  ['/feedback', 'Feedback']
+  ['/dashboard', 'Overview', 'home'],
+  ['/skills', 'Skill catalog', 'grid'],
+  ['/requests', 'Requests', 'file'],
+  ['/sessions', 'Sessions', 'calendar'],
+  ['/feedback', 'Feedback', 'star']
 ];
 
 export default function Layout({ children }) {
   const path = usePath();
   const me = useStore(currentUser);
   const unread = useStore((s) => s.notifications.filter((n) => n.userId === s.currentUserId && !n.read).length);
+  const pending = useStore((s) => s.requests.filter((r) => r.mentorId === s.currentUserId && r.status === 'PROPOSED').length);
+  const [drawer, setDrawer] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const toast = useToast();
@@ -37,73 +35,88 @@ export default function Layout({ children }) {
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
-  useEffect(() => setMenuOpen(false), [path]);
+  useEffect(() => {
+    setDrawer(false);
+    setMenuOpen(false);
+  }, [path]);
+
+  const isActive = (to) => path === to || path.startsWith(to + '/');
+  const roleLabel = me.role.charAt(0) + me.role.slice(1).toLowerCase();
 
   return (
-    <div className="shell">
-      <header className="topbar">
-        <div className="topbar-inner">
+    <div className="app">
+      <aside className={`sidebar ${drawer ? 'open' : ''}`}>
+        <div className="sidebar-top">
           <Brand to="/dashboard" />
-          <nav className="mainnav" aria-label="Main">
-            {NAV.map(([to, label]) => (
-              <Link key={to} to={to} className={path === to || path.startsWith(to + '/') ? 'active' : ''}>
-                {label}
-              </Link>
-            ))}
-          </nav>
-          <div className="topbar-right">
-            <Link to="/notifications" className={`icon-btn ${path === '/notifications' ? 'active' : ''}`} aria-label={`Notifications, ${unread} unread`}>
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-              </svg>
-              {unread > 0 && <span className="badge-dot">{unread > 9 ? '9+' : unread}</span>}
-            </Link>
-            <div className="usermenu" ref={menuRef}>
-              <button className="user-btn" onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen}>
-                <Avatar user={me} size={32} />
-                <span className="user-meta">
-                  <strong>{me.firstName}</strong>
-                  <small>{me.role.charAt(0) + me.role.slice(1).toLowerCase()}</small>
-                </span>
-              </button>
-              {menuOpen && (
-                <div className="menu" role="menu">
-                  <div className="menu-head">
-                    <strong>{fullName(me)}</strong>
-                    <small className="muted">{me.email}</small>
-                    <small className="muted">{me.department}</small>
-                  </div>
-                  <button
-                    role="menuitem"
-                    onClick={() => {
-                      resetDemo();
-                      toast('Demo data has been reset');
-                    }}
-                  >
-                    Reset demo data
-                  </button>
-                  <button
-                    role="menuitem"
-                    className="danger"
-                    onClick={() => {
-                      logout();
-                      navigate('/');
-                    }}
-                  >
-                    Log out
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
-      </header>
-      <main className="page">{children}</main>
-      <footer className="app-footer">
-        <span>© {new Date().getFullYear()} SkillSwap · Corporate Knowledge Exchange Portal</span>
-        <span className="muted">Demo mode · data is stored in your browser</span>
-      </footer>
+        <nav className="sidenav" aria-label="Main">
+          {NAV.map(([to, label, icon]) => (
+            <Link key={to} to={to} className={isActive(to) ? 'active' : ''}>
+              <Icon name={icon} />
+              <span>{label}</span>
+              {to === '/requests' && pending > 0 && <span className="nav-count">{pending}</span>}
+            </Link>
+          ))}
+          <Link to="/notifications" className={isActive('/notifications') ? 'active' : ''}>
+            <Icon name="bell" />
+            <span>Notifications</span>
+            {unread > 0 && <span className="nav-count">{unread}</span>}
+          </Link>
+        </nav>
+
+        <div className="sidebar-bottom" ref={menuRef}>
+          {menuOpen && (
+            <div className="menu" role="menu">
+              <div className="menu-head">
+                <strong>{fullName(me)}</strong>
+                <span className="muted">{me.email}</span>
+              </div>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  resetDemo();
+                  setMenuOpen(false);
+                  toast('Demo data reset');
+                }}
+              >
+                <Icon name="refresh" /> Reset demo data
+              </button>
+              <button
+                role="menuitem"
+                onClick={() => {
+                  logout();
+                  navigate('/');
+                }}
+              >
+                <Icon name="logout" /> Sign out
+              </button>
+            </div>
+          )}
+          <button className="account" onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen}>
+            <Avatar user={me} size={30} />
+            <span className="account-meta">
+              <strong>{fullName(me)}</strong>
+              <span>{roleLabel} · {me.department}</span>
+            </span>
+            <Icon name="chevronDown" size={14} />
+          </button>
+        </div>
+      </aside>
+      {drawer && <div className="scrim" onClick={() => setDrawer(false)} />}
+
+      <div className="main">
+        <header className="mobilebar">
+          <button className="icon-btn" onClick={() => setDrawer(true)} aria-label="Open menu">
+            <Icon name="menu" size={20} />
+          </button>
+          <Brand to="/dashboard" />
+          <Link to="/notifications" className="icon-btn" aria-label={`Notifications, ${unread} unread`}>
+            <Icon name="bell" size={20} />
+            {unread > 0 && <span className="bell-dot" />}
+          </Link>
+        </header>
+        <main className="page">{children}</main>
+      </div>
     </div>
   );
 }

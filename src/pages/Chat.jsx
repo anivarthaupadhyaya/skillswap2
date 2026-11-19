@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Redirect } from '../router';
 import { currentUser, fullName, sendMessage, skillById, userById, useStore } from '../data/store';
-import { Avatar, fmtTime, StatusPill } from '../components/ui';
+import { Avatar, fmtTime, Icon, StatusPill } from '../components/ui';
 
 export default function Chat({ params }) {
   const s = useStore();
@@ -30,18 +30,18 @@ export default function Chat({ params }) {
   let lastDay = '';
   return (
     <div className="chat-page">
-      <Link to="/requests" className="back-link">← Back to requests</Link>
+      <Link to="/requests" className="back-link"><Icon name="chevronLeft" size={14} /> Requests</Link>
       <div className="chat">
         <div className="chat-head">
-          <Avatar user={other} size={42} />
+          <Avatar user={other} size={36} />
           <div className="grow">
-            <strong>{fullName(other)}</strong>
-            <small className="muted">{skill?.name} · {req.mentorId === me.id ? 'Your mentee' : 'Your mentor'}</small>
+            <div className="row-title">{fullName(other)}</div>
+            <div className="row-sub">{skill?.name} · {req.mentorId === me.id ? 'Mentee' : 'Mentor'}</div>
           </div>
           <StatusPill status={req.status} />
         </div>
         <div className="chat-body">
-          {messages.length === 0 && <div className="chat-empty">No messages yet. Say hi 👋</div>}
+          {messages.length === 0 && <div className="chat-empty">No messages yet.</div>}
           {messages.map((m) => {
             const mine = m.senderId === me.id;
             const day = new Date(m.sentAt).toDateString();
@@ -49,10 +49,14 @@ export default function Chat({ params }) {
             lastDay = day;
             return (
               <div key={m.id}>
-                {showDay && <div className="chat-day">{new Date(m.sentAt).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</div>}
+                {showDay && (
+                  <div className="chat-day">
+                    <span>{new Date(m.sentAt).toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                  </div>
+                )}
                 <div className={`msg ${mine ? 'mine' : ''}`}>
                   <div className="bubble">{m.text}</div>
-                  <small className="msg-time">{fmtTime(m.sentAt)}</small>
+                  <span className="msg-time">{mine ? 'You' : other.firstName} · {fmtTime(m.sentAt)}</span>
                 </div>
               </div>
             );
@@ -60,8 +64,10 @@ export default function Chat({ params }) {
           <div ref={endRef} />
         </div>
         <form className="chat-form" onSubmit={submit}>
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your message…" maxLength={2000} aria-label="Message" />
-          <button className="btn btn-primary" type="submit" disabled={!text.trim()}>Send</button>
+          <input value={text} onChange={(e) => setText(e.target.value)} placeholder={`Message ${other.firstName}`} maxLength={2000} aria-label="Message" />
+          <button className="btn btn-primary" type="submit" disabled={!text.trim()} aria-label="Send">
+            <Icon name="send" size={15} /> Send
+          </button>
         </form>
       </div>
     </div>

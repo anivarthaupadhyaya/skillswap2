@@ -5,18 +5,17 @@ import {
   completeSession, createSkill, createSlot, currentUser, deleteSkill, fullName, mentorRating,
   rateMentor, respondToSlot, sessionForRequest, skillById, userById, useStore
 } from '../data/store';
-import { Avatar, CategoryTag, EmptyState, fmtDate, fmtDateTime, fmtTime, PageHeader, Stars, StatusPill, useToast } from '../components/ui';
-
-const modeLabel = (m) => (m === 'VIDEO_VISIT' ? '🎥 Video Visit' : '📍 In Person');
+import {
+  Avatar, CategoryTag, EmptyState, fmtDateTime, fmtShortDate, fmtTime, Icon, ModeLabel, PageHeader, StatusPill, useToast
+} from '../components/ui';
 
 function SlotLine({ sess }) {
   if (!sess) return null;
   return (
     <div className="slot-line">
-      <span>🗓 {fmtDate(sess.start)}</span>
-      <span>⏰ {fmtTime(sess.start)} – {fmtTime(sess.end)}</span>
-      <span>{modeLabel(sess.mode)}</span>
-      <StatusPill status={sess.status} />
+      <span className="meta-item"><Icon name="calendar" size={14} /> {new Date(sess.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+      <span className="meta-item"><Icon name="clock" size={14} /> {fmtTime(sess.start)} – {fmtTime(sess.end)}</span>
+      <ModeLabel mode={sess.mode} />
     </div>
   );
 }
@@ -31,12 +30,12 @@ function RateForm({ requestId, existing }) {
       className="rate-form"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!rating) return toast('Pick a star rating first', 'bad');
+        if (!rating) return toast('Select a rating first', 'bad');
         rateMentor(requestId, rating, comment.trim());
-        toast('Thanks for rating your mentor!');
+        toast('Rating saved');
       }}
     >
-      <span className="small strong">{existing ? 'Your rating' : 'Rate mentor'}</span>
+      <span className="rate-label">{existing ? 'Your rating' : 'Rate this mentor'}</span>
       <div className="star-input" onMouseLeave={() => setHover(0)}>
         {[1, 2, 3, 4, 5].map((i) => (
           <button
@@ -51,8 +50,8 @@ function RateForm({ requestId, existing }) {
           </button>
         ))}
       </div>
-      <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Optional comment" />
-      <button className="btn btn-soft" type="submit">{existing ? 'Update' : 'Submit'}</button>
+      <input value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add a comment (optional)" />
+      <button className="btn btn-secondary btn-sm" type="submit">{existing ? 'Update' : 'Submit'}</button>
     </form>
   );
 }
@@ -63,38 +62,38 @@ function ScheduledList({ s, me }) {
     .filter((x) => (x.menteeId === me.id || x.mentorId === me.id) && ['SCHEDULED', 'COMPLETED', 'IN_PROGRESS'].includes(x.status))
     .sort((a, b) => new Date(b.start) - new Date(a.start));
   return (
-    <section className="stack">
-      <h2 className="h2">Scheduled sessions</h2>
+    <section className="panel">
+      <div className="panel-head"><h2>Scheduled sessions</h2></div>
       {list.length === 0 ? (
-        <EmptyState icon="📅" title="No sessions yet">Confirmed slots will show up here.</EmptyState>
+        <EmptyState icon="calendar" title="No sessions yet">Confirmed time slots appear here.</EmptyState>
       ) : (
-        <div className="session-list">
+        <ul className="rows">
           {list.map((x) => {
             const other = userById(s, x.mentorId === me.id ? x.menteeId : x.mentorId);
             const skill = skillById(s, s.requests.find((r) => r.id === x.requestId)?.skillId);
             const d = new Date(x.start);
             return (
-              <article key={x.id} className={`session-card ${x.status === 'COMPLETED' ? 'done' : ''}`}>
-                <div className="date-block">
+              <li key={x.id} className="row-item">
+                <div className={`date-chip ${x.status === 'COMPLETED' ? 'past' : ''}`}>
                   <span>{d.toLocaleDateString(undefined, { month: 'short' })}</span>
                   <strong>{d.getDate()}</strong>
                 </div>
                 <div className="grow">
-                  <h3>{skill?.name || 'Session'}</h3>
-                  <small className="muted">
-                    with {fullName(other)} · {fmtTime(x.start)} – {fmtTime(x.end)} · {modeLabel(x.mode)}
-                  </small>
+                  <div className="row-title">{skill?.name || 'Session'}</div>
+                  <div className="row-sub">
+                    with {fullName(other)} · {fmtTime(x.start)} – {fmtTime(x.end)} · <ModeLabel mode={x.mode} />
+                  </div>
                 </div>
                 <StatusPill status={x.status} />
                 {x.status === 'SCHEDULED' && (
-                  <button className="btn btn-soft" onClick={() => { completeSession(x.id); toast('Session marked complete 🎉'); }}>
+                  <button className="btn btn-secondary btn-sm" onClick={() => { completeSession(x.id); toast('Session marked as completed'); }}>
                     Mark complete
                   </button>
                 )}
-              </article>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </section>
   );
@@ -110,47 +109,58 @@ export default function Sessions() {
     return (
       <div className="stack-lg">
         <PageHeader
-          title="My Sessions"
-          subtitle="Skills you are giving and the sessions you have scheduled."
-          actions={<Link to="/sessions/new-skill" className="btn btn-primary">+ Create skill</Link>}
+          title="Sessions"
+          subtitle="Skills you teach and your schedule"
+          actions={<Link to="/sessions/new-skill" className="btn btn-primary"><Icon name="plus" /> New skill</Link>}
         />
-        <section className="stack">
-          <h2 className="h2">Skills I am giving</h2>
+        <section className="panel">
+          <div className="panel-head"><h2>Skills you teach</h2></div>
           {mySkills.length === 0 ? (
-            <EmptyState icon="🧑‍🏫" title="You haven't shared any skills yet">
-              <Link to="/sessions/new-skill">Create your first skill →</Link>
+            <EmptyState icon="book" title="You haven't offered any skills yet">
+              <Link to="/sessions/new-skill">Create your first skill</Link>
             </EmptyState>
           ) : (
-            <div className="skill-grid">
-              {mySkills.map((k) => {
-                const reqs = s.requests.filter((r) => r.skillId === k.id);
-                const pending = reqs.filter((r) => r.status === 'PROPOSED').length;
-                return (
-                  <article key={k.id} className="skill-card">
-                    <div className="tags">{k.categories.map((c) => <CategoryTag key={c} k={c} />)}</div>
-                    <h3>{k.name}</h3>
-                    <p className="muted">{k.description}</p>
-                    <div className="mini-stats">
-                      <span><strong>{reqs.length}</strong> mentee requests</span>
-                      {pending > 0 && <span className="pill pill-warn">{pending} pending</span>}
-                    </div>
-                    <div className="row gap-sm">
-                      <Link to={`/sessions/skill/${k.id}`} className="btn btn-primary grow">View mentees</Link>
-                      <button
-                        className="btn btn-danger-soft"
-                        onClick={() => {
-                          if (window.confirm(`Delete "${k.name}" and all its requests?`)) {
-                            deleteSkill(k.id);
-                            toast('Skill deleted', 'bad');
-                          }
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="table-wrap flush">
+              <table className="table">
+                <thead>
+                  <tr><th>Skill</th><th>Category</th><th>Mentees</th><th>Pending</th><th className="right"></th></tr>
+                </thead>
+                <tbody>
+                  {mySkills.map((k) => {
+                    const reqs = s.requests.filter((r) => r.skillId === k.id);
+                    const pending = reqs.filter((r) => r.status === 'PROPOSED').length;
+                    return (
+                      <tr key={k.id}>
+                        <td data-label="Skill">
+                          <Link to={`/sessions/skill/${k.id}`} className="cell-title plain">{k.name}</Link>
+                          <div className="cell-sub">Created {fmtShortDate(k.createdAt)}</div>
+                        </td>
+                        <td data-label="Category"><div className="tags">{k.categories.map((c) => <CategoryTag key={c} k={c} />)}</div></td>
+                        <td data-label="Mentees">{reqs.filter((r) => r.status !== 'DECLINED').length}</td>
+                        <td data-label="Pending">{pending > 0 ? <span className="status status-warn">{pending}</span> : <span className="muted">0</span>}</td>
+                        <td className="right">
+                          <div className="cell-actions">
+                            <Link to={`/sessions/skill/${k.id}`} className="btn btn-secondary btn-sm">View mentees</Link>
+                            <button
+                              className="btn btn-ghost btn-sm icon-only"
+                              aria-label={`Delete ${k.name}`}
+                              title="Delete skill"
+                              onClick={() => {
+                                if (window.confirm(`Delete "${k.name}" and all of its requests?`)) {
+                                  deleteSkill(k.id);
+                                  toast('Skill deleted', 'bad');
+                                }
+                              }}
+                            >
+                              <Icon name="trash" size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
@@ -163,58 +173,63 @@ export default function Sessions() {
   const myReqs = s.requests.filter((r) => r.menteeId === me.id).sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
   return (
     <div className="stack-lg">
-      <PageHeader title="My Sessions" subtitle="Skills you registered for, proposed slots and your sessions." actions={<Link to="/skills" className="btn btn-primary">Find skills</Link>} />
+      <PageHeader title="Sessions" subtitle="Skills you're learning and your schedule" actions={<Link to="/skills" className="btn btn-primary">Browse skills</Link>} />
       <section className="stack">
-        <h2 className="h2">Skills I registered for</h2>
+        <h2 className="section-label">Registered skills</h2>
         {myReqs.length === 0 ? (
-          <EmptyState icon="🎓" title="You have not registered for any skills yet">
-            <Link to="/skills">Browse the catalog →</Link>
+          <EmptyState icon="book" title="You haven't registered for any skills yet">
+            <Link to="/skills">Browse the catalog</Link>
           </EmptyState>
         ) : (
-          <div className="stack">
-            {myReqs.map((r) => {
-              const mentor = userById(s, r.mentorId);
-              const skill = skillById(s, r.skillId);
-              const sess = sessionForRequest(s, r.id);
-              const rating = mentorRating(s, r.mentorId);
-              const active = ['ACCEPTED', 'COMPLETED'].includes(r.status);
-              const myRating = s.ratings.find((x) => x.requestId === r.id && x.menteeId === me.id);
-              return (
-                <article key={r.id} className="card reg-card">
-                  <div className="reg-head">
-                    <Avatar user={mentor} size={44} />
-                    <div className="grow">
-                      <div className="row gap-sm wrap">
-                        <h3>{skill?.name}</h3>
-                        <StatusPill status={r.status} />
-                      </div>
-                      <small className="muted">
-                        Mentor: <strong>{fullName(mentor)}</strong> · {rating > 0 ? <><Stars value={rating} size={12} /> {rating.toFixed(1)} / 5</> : 'No ratings yet'}
-                      </small>
+          myReqs.map((r) => {
+            const mentor = userById(s, r.mentorId);
+            const skill = skillById(s, r.skillId);
+            const sess = sessionForRequest(s, r.id);
+            const rating = mentorRating(s, r.mentorId);
+            const active = ['ACCEPTED', 'COMPLETED'].includes(r.status);
+            const myRating = s.ratings.find((x) => x.requestId === r.id && x.menteeId === me.id);
+            return (
+              <article key={r.id} className="panel reg-card">
+                <div className="reg-head">
+                  <Avatar user={mentor} size={36} />
+                  <div className="grow">
+                    <div className="reg-title">
+                      <h3>{skill?.name}</h3>
+                      <StatusPill status={r.status} />
                     </div>
-                    {active && <Link to={`/requests/${r.id}/chat`} className="btn btn-outline">💬 Chat</Link>}
+                    <div className="row-sub">
+                      {fullName(mentor)} · {mentor.department}
+                      {rating > 0 && <> · <span className="star-inline">★</span> {rating.toFixed(1)}</>}
+                    </div>
                   </div>
-
-                  {sess && (
-                    <div className={`slot-box ${sess.status === 'PENDING_MENTEE_CONFIRMATION' ? 'pending' : ''}`}>
-                      <div>
-                        <span className="small strong">{sess.status === 'PENDING_MENTEE_CONFIRMATION' ? 'Proposed slot' : 'Your slot'}</span>
-                        <SlotLine sess={sess} />
-                      </div>
-                      {sess.status === 'PENDING_MENTEE_CONFIRMATION' && (
-                        <div className="row gap-sm">
-                          <button className="btn btn-primary" onClick={() => { respondToSlot(sess.id, true); toast('Slot accepted, session scheduled!'); }}>Accept slot</button>
-                          <button className="btn btn-danger-soft" onClick={() => { respondToSlot(sess.id, false); toast('Slot rejected', 'bad'); }}>Reject</button>
-                        </div>
-                      )}
-                    </div>
+                  {active && (
+                    <Link to={`/requests/${r.id}/chat`} className="btn btn-secondary btn-sm"><Icon name="message" size={15} /> Chat</Link>
                   )}
-                  {r.status === 'ACCEPTED' && !sess && <p className="muted small">Your mentor will propose a time slot soon.</p>}
-                  {active && <RateForm requestId={r.id} existing={myRating} />}
-                </article>
-              );
-            })}
-          </div>
+                </div>
+
+                {sess && (
+                  <div className={`slot-box ${sess.status === 'PENDING_MENTEE_CONFIRMATION' ? 'pending' : ''}`}>
+                    <div>
+                      <div className="slot-heading">
+                        {sess.status === 'PENDING_MENTEE_CONFIRMATION' ? `${mentor.firstName} proposed a time` : 'Scheduled'}
+                      </div>
+                      <SlotLine sess={sess} />
+                    </div>
+                    {sess.status === 'PENDING_MENTEE_CONFIRMATION' && (
+                      <div className="cell-actions">
+                        <button className="btn btn-primary btn-sm" onClick={() => { respondToSlot(sess.id, true); toast('Session confirmed'); }}>Accept</button>
+                        <button className="btn btn-secondary btn-sm" onClick={() => { respondToSlot(sess.id, false); toast('Time slot declined', 'bad'); }}>Decline</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {r.status === 'PROPOSED' && <p className="muted small">Waiting for {mentor.firstName} to accept your request.</p>}
+                {r.status === 'ACCEPTED' && !sess && <p className="muted small">{mentor.firstName} will propose a time slot soon.</p>}
+                {r.status === 'DECLINED' && <p className="muted small">{mentor.firstName} isn't available for this right now.</p>}
+                {active && <RateForm requestId={r.id} existing={myRating} />}
+              </article>
+            );
+          })
         )}
       </section>
       <ScheduledList s={s} me={me} />
@@ -232,43 +247,43 @@ export function NewSkill() {
 
   return (
     <div className="narrow stack-lg">
-      <div>
-        <Link to="/sessions" className="back-link">← Back to sessions</Link>
-        <PageHeader title="Create a new skill" subtitle="Share something you're great at with your colleagues." />
-      </div>
+      <PageHeader
+        back={<Link to="/sessions" className="back-link"><Icon name="chevronLeft" size={14} /> Sessions</Link>}
+        title="New skill"
+        subtitle="Describe what you can teach. It will appear in the catalog right away."
+      />
       <form
-        className="card form"
+        className="panel form"
         onSubmit={(e) => {
           e.preventDefault();
           if (!form.category) return setError('Please choose a category.');
           const err = createSkill(form);
           if (err) return setError(err);
-          toast('Skill published to the catalog!');
+          toast('Skill published');
           navigate('/sessions');
         }}
       >
         {error && <div className="alert alert-bad">{error}</div>}
         <label className="field">
-          <span>Skill name</span>
-          <input value={form.name} onChange={set('name')} required placeholder="e.g. Watercolor Painting" />
-          <small className="muted">Must be unique (no duplicate skill names).</small>
+          <span>Name</span>
+          <input value={form.name} onChange={set('name')} required placeholder="e.g. Watercolor painting" />
+          <small className="muted">Must be unique.</small>
         </label>
         <label className="field">
           <span>Description</span>
-          <textarea value={form.description} onChange={set('description')} required rows={4} placeholder="What will mentees learn? Who is it for?" />
+          <textarea value={form.description} onChange={set('description')} required rows={4} placeholder="What will people learn, and who is it for?" />
         </label>
-        <div className="field">
+        <label className="field">
           <span>Category</span>
-          <div className="cat-pick">
-            {CATEGORIES.map((c) => (
-              <label key={c.key} className={`cat-option tint-${c.tint} ${form.category === c.key ? 'selected' : ''}`}>
-                <input type="radio" name="category" value={c.key} checked={form.category === c.key} onChange={set('category')} />
-                <span>{c.emoji}</span> {c.name}
-              </label>
-            ))}
-          </div>
+          <select value={form.category} onChange={set('category')} required>
+            <option value="">Select a category</option>
+            {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
+          </select>
+        </label>
+        <div className="form-actions">
+          <Link to="/sessions" className="btn btn-secondary">Cancel</Link>
+          <button className="btn btn-primary" type="submit">Create skill</button>
         </div>
-        <button className="btn btn-primary btn-lg" type="submit">Create skill</button>
       </form>
     </div>
   );
@@ -281,7 +296,7 @@ const TIMES = [
 ];
 const label12 = (t) => {
   const [h, m] = t.split(':').map(Number);
-  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'am' : 'pm'}`;
+  return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 };
 
 function BookingCard({ requestId, onDone }) {
@@ -304,59 +319,62 @@ function BookingCard({ requestId, onDone }) {
     const start = new Date(day);
     start.setHours(h, m, 0, 0);
     createSlot(requestId, start.toISOString(), duration, mode);
-    toast('Slot proposed to mentee');
+    toast('Time slot sent to mentee');
     onDone();
   };
 
   return (
     <div className="booking">
-      <div className="booking-top">
-        <strong>Book appointment</strong>
+      <div className="booking-row">
+        <span className="booking-label">Format</span>
         <div className="segmented">
-          {[['IN_PERSON', 'In Person'], ['VIDEO_VISIT', 'Video Visit']].map(([v, l]) => (
+          {[['IN_PERSON', 'In person'], ['VIDEO_VISIT', 'Video call']].map(([v, l]) => (
             <button key={v} type="button" className={mode === v ? 'active' : ''} onClick={() => setMode(v)}>{l}</button>
           ))}
         </div>
       </div>
-      <div className="day-strip">
-        {days.map((d) => {
-          const sel = day && d.toDateString() === day.toDateString();
-          return (
-            <button key={d.toISOString()} type="button" className={`day-chip ${sel ? 'active' : ''}`} onClick={() => { setDay(d); setError(false); }}>
-              <small>{d.toLocaleDateString(undefined, { weekday: 'short' })}</small>
-              <strong>{d.getDate()}</strong>
-              <small>{d.toLocaleDateString(undefined, { month: 'short' })}</small>
-            </button>
-          );
-        })}
-      </div>
-      <div className="time-rows">
-        {TIMES.map(([lbl, ts]) => (
-          <div key={lbl} className="time-row">
-            <span className="time-label">{lbl}</span>
-            <div className="time-chips">
-              {ts.map((t) => (
-                <button key={t} type="button" className={`time-chip ${time === t ? 'active' : ''}`} onClick={() => { setTime(t); setError(false); }}>
-                  {label12(t)}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="booking-foot">
-        <label className="inline-field">
-          Duration
-          <select value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-            {[30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{m} mins</option>)}
-          </select>
-        </label>
-        <div className="row gap-sm">
-          <button type="button" className="btn btn-ghost" onClick={onDone}>Cancel</button>
-          <button type="button" className="btn btn-primary" onClick={save}>Save slot</button>
+      <div className="booking-row top">
+        <span className="booking-label">Date</span>
+        <div className="day-strip">
+          {days.map((d) => {
+            const sel = day && d.toDateString() === day.toDateString();
+            return (
+              <button key={d.toISOString()} type="button" className={`day-chip ${sel ? 'active' : ''}`} onClick={() => { setDay(d); setError(false); }}>
+                <span>{d.toLocaleDateString(undefined, { weekday: 'short' })}</span>
+                <strong>{d.getDate()}</strong>
+              </button>
+            );
+          })}
         </div>
       </div>
-      {error && <div className="alert alert-bad">Please select both a date and a time.</div>}
+      <div className="booking-row top">
+        <span className="booking-label">Time</span>
+        <div className="time-groups">
+          {TIMES.map(([lbl, ts]) => (
+            <div key={lbl} className="time-group">
+              <span className="time-label">{lbl}</span>
+              <div className="time-chips">
+                {ts.map((t) => (
+                  <button key={t} type="button" className={`time-chip ${time === t ? 'active' : ''}`} onClick={() => { setTime(t); setError(false); }}>
+                    {label12(t)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="booking-row">
+        <span className="booking-label">Duration</span>
+        <select className="select-sm" value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+          {[30, 45, 60, 90, 120].map((m) => <option key={m} value={m}>{m} minutes</option>)}
+        </select>
+      </div>
+      {error && <div className="alert alert-bad">Select a date and a time.</div>}
+      <div className="form-actions">
+        <button type="button" className="btn btn-secondary btn-sm" onClick={onDone}>Cancel</button>
+        <button type="button" className="btn btn-primary btn-sm" onClick={save}>Send to mentee</button>
+      </div>
     </div>
   );
 }
@@ -372,30 +390,30 @@ export function SkillMentees({ params }) {
 
   return (
     <div className="stack-lg">
-      <div>
-        <Link to="/sessions" className="back-link">← Back to my sessions</Link>
-        <PageHeader
-          title={skill.name}
-          subtitle={<span className="tags">{skill.categories.map((c) => <CategoryTag key={c} k={c} />)}</span>}
-          actions={
-            <button
-              className="btn btn-danger-soft"
-              onClick={() => {
-                if (window.confirm(`Delete "${skill.name}" completely?`)) {
-                  deleteSkill(skill.id);
-                  toast('Skill deleted', 'bad');
-                  navigate('/sessions');
-                }
-              }}
-            >
-              Delete skill
-            </button>
-          }
-        />
-      </div>
+      <PageHeader
+        back={<Link to="/sessions" className="back-link"><Icon name="chevronLeft" size={14} /> Sessions</Link>}
+        title={skill.name}
+        subtitle={<div className="tags">{skill.categories.map((c) => <CategoryTag key={c} k={c} />)}</div>}
+        actions={
+          <button
+            className="btn btn-secondary danger-text"
+            onClick={() => {
+              if (window.confirm(`Delete "${skill.name}"? This removes all of its requests and sessions.`)) {
+                deleteSkill(skill.id);
+                toast('Skill deleted', 'bad');
+                navigate('/sessions');
+              }
+            }}
+          >
+            <Icon name="trash" size={15} /> Delete skill
+          </button>
+        }
+      />
+      <p className="muted skill-about">{skill.description}</p>
 
+      <h2 className="section-label">Mentees ({reqs.length})</h2>
       {reqs.length === 0 ? (
-        <EmptyState icon="👀" title="No mentees registered for this skill yet">Share it with your team!</EmptyState>
+        <EmptyState icon="users" title="No one has registered yet" />
       ) : (
         <div className="stack">
           {reqs.map((r) => {
@@ -403,26 +421,36 @@ export function SkillMentees({ params }) {
             const sess = sessionForRequest(s, r.id);
             const active = ['ACCEPTED', 'COMPLETED'].includes(r.status);
             return (
-              <article key={r.id} className="card reg-card">
+              <article key={r.id} className="panel reg-card">
                 <div className="reg-head">
-                  <Avatar user={mentee} size={44} />
+                  <Avatar user={mentee} size={36} />
                   <div className="grow">
-                    <div className="row gap-sm wrap">
+                    <div className="reg-title">
                       <h3>{fullName(mentee)}</h3>
                       <StatusPill status={r.status} />
                     </div>
-                    <small className="muted">{mentee.department} · requested {fmtDateTime(r.requestedAt)}</small>
+                    <div className="row-sub">{mentee.department} · requested {fmtDateTime(r.requestedAt)}</div>
                   </div>
-                  <div className="row gap-sm wrap">
-                    {r.status === 'PROPOSED' && <Link to="/requests" className="btn btn-primary">Respond</Link>}
-                    {active && <Link to={`/requests/${r.id}/chat`} className="btn btn-outline">💬 Chat</Link>}
+                  <div className="cell-actions">
+                    {r.status === 'PROPOSED' && <Link to="/requests" className="btn btn-primary btn-sm">Respond</Link>}
+                    {active && <Link to={`/requests/${r.id}/chat`} className="btn btn-secondary btn-sm"><Icon name="message" size={15} /> Chat</Link>}
                     {r.status === 'ACCEPTED' && booking !== r.id && (
-                      <button className="btn btn-soft" onClick={() => setBooking(r.id)}>📅 {sess ? 'New slot' : 'Create slot'}</button>
+                      <button className="btn btn-secondary btn-sm" onClick={() => setBooking(r.id)}>
+                        <Icon name="calendar" size={15} /> {sess ? 'Propose new time' : 'Propose time'}
+                      </button>
                     )}
                   </div>
                 </div>
-                {r.message && <p className="quote">“{r.message}”</p>}
-                {sess && <SlotLine sess={sess} />}
+                {r.message && <p className="note">{r.message}</p>}
+                {sess && (
+                  <div className="slot-box">
+                    <div>
+                      <div className="slot-heading">{sess.status === 'PENDING_MENTEE_CONFIRMATION' ? 'Waiting for confirmation' : 'Scheduled'}</div>
+                      <SlotLine sess={sess} />
+                    </div>
+                    <StatusPill status={sess.status} />
+                  </div>
+                )}
                 {booking === r.id && <BookingCard requestId={r.id} onDone={() => setBooking(null)} />}
               </article>
             );

@@ -86,7 +86,7 @@ export function register(data) {
     return {
       users: [...s.users, user],
       currentUserId: id,
-      notifications: notify(s, id, 'SYSTEM_ALERT', 'Welcome to SkillSwap 🎉', 'Your account is ready. Explore the catalog to get started.', '/skills')
+      notifications: notify(s, id, 'SYSTEM_ALERT', 'Welcome to SkillSwap', 'Your account is ready. Explore the catalog to get started.', '/skills')
     };
   });
   return null;

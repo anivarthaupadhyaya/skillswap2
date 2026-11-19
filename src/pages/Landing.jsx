@@ -2,103 +2,116 @@ import { Link } from '../router';
 import { Brand } from '../components/Layout';
 import { CATEGORIES } from '../data/seed';
 import { useStore } from '../data/store';
+import { Icon } from '../components/ui';
 
-const FEATURES = [
-  ['🎓', 'Skill mentorship', 'Connect with mentors across the company for focused one-on-one sessions.'],
-  ['🔄', 'Peer exchange', 'Teach what you know, learn what you need. Everyone is both a mentor and a mentee.'],
-  ['📅', 'Slot booking', 'Mentors propose in-person or video slots and mentees confirm in one click.'],
-  ['💬', 'Built-in chat', 'Every accepted request gets its own conversation thread.'],
-  ['🔔', 'Notifications', 'Stay in the loop on requests, slots, messages and feedback.'],
-  ['⭐', 'Ratings & feedback', 'Rate mentors and track your growth with structured feedback.']
+const STEPS = [
+  ['Find a colleague', 'Browse skills your coworkers have offered to teach, from Python to public speaking, and send a request.'],
+  ['Agree on a time', 'Your mentor proposes an in-person or video slot. Confirm it, or ask for another time in the request chat.'],
+  ['Learn and give feedback', 'Meet, mark the session complete and rate it, so others know who to learn from next.']
 ];
 
+function ProductPreview() {
+  const rows = [
+    ['Morning Yoga Flow', 'Priya Sharma', 'Tue, 8:00 AM', 'Scheduled', 'info'],
+    ['Acoustic Guitar Basics', 'Arjun Mehta', 'Thu, 6:00 PM', 'Awaiting confirmation', 'warn'],
+    ['Chess Strategy', 'Sara Khan', 'Not scheduled', 'Pending', 'warn'],
+    ['Public Speaking', 'Daniel Lee', 'Oct 31', 'Completed', 'muted']
+  ];
+  return (
+    <div className="preview" aria-hidden="true">
+      <div className="preview-bar">
+        <span /><span /><span />
+      </div>
+      <div className="preview-body">
+        <div className="preview-side">
+          <div className="preview-brand"><span className="brand-mark sm">S</span> SkillSwap</div>
+          {['Overview', 'Skill catalog', 'Requests', 'Sessions', 'Feedback'].map((x, i) => (
+            <div key={x} className={`preview-nav ${i === 3 ? 'on' : ''}`}>{x}</div>
+          ))}
+        </div>
+        <div className="preview-main">
+          <div className="preview-title">My sessions</div>
+          <table className="preview-table">
+            <tbody>
+              {rows.map(([skill, who, when, status, tone]) => (
+                <tr key={skill}>
+                  <td><strong>{skill}</strong><span>{who}</span></td>
+                  <td className="hide-sm">{when}</td>
+                  <td><span className={`status status-${tone}`}>{status}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Landing() {
-  const stats = useStore((s) => ({
-    skills: s.skills.length,
-    mentors: s.users.filter((u) => u.role === 'MENTOR').length,
-    sessions: s.sessions.length
-  }));
+  const counts = useStore((s) => Object.fromEntries(CATEGORIES.map((c) => [c.key, s.skills.filter((k) => k.categories.includes(c.key)).length])));
 
   return (
     <div className="landing">
       <header className="landing-nav">
         <Brand />
-        <div className="row gap-sm">
-          <Link to="/login" className="btn btn-ghost">Log in</Link>
-          <Link to="/register" className="btn btn-primary">Get started</Link>
+        <nav className="landing-links">
+          <a href="#how">How it works</a>
+          <a href="#categories">Categories</a>
+        </nav>
+        <div className="landing-auth">
+          <Link to="/login" className="btn btn-ghost">Sign in</Link>
+          <Link to="/register" className="btn btn-primary">Create account</Link>
         </div>
       </header>
 
       <section className="hero">
         <div className="hero-copy">
-          <span className="eyebrow">Corporate Knowledge Exchange Portal</span>
-          <h1>
-            Learn from the people <span className="grad">you already work with.</span>
-          </h1>
+          <h1>Learn from the people you already work with.</h1>
           <p className="lead">
-            SkillSwap fosters a culture of continuous learning by connecting colleagues for mutual skill development,
-            from yoga and guitar to Python and public speaking.
+            SkillSwap is an internal mentoring portal. Employees offer skills they're good at, colleagues request
+            sessions, and everyone keeps track of what they've learned in one place.
           </p>
-          <div className="row gap-sm wrap">
-            <Link to="/register" className="btn btn-primary btn-lg">Create free account</Link>
-            <Link to="/login" className="btn btn-outline btn-lg">Try the demo →</Link>
+          <div className="hero-actions">
+            <Link to="/login" className="btn btn-primary btn-lg">Open the demo</Link>
+            <Link to="/register" className="btn btn-secondary btn-lg">Create an account</Link>
           </div>
-          <div className="hero-stats">
-            <div><strong>{stats.skills}+</strong><span>skills shared</span></div>
-            <div><strong>{stats.mentors}</strong><span>active mentors</span></div>
-            <div><strong>{CATEGORIES.length}</strong><span>categories</span></div>
-          </div>
+          <p className="hero-note muted">The demo runs entirely in your browser. No sign-up required.</p>
         </div>
-
-        <div className="hero-visual" aria-hidden="true">
-          <div className="float-card fc-1">
-            <span className="fc-emoji">🧘</span>
-            <div><strong>Morning Yoga Flow</strong><small>with Priya · Tomorrow 8:00</small></div>
-          </div>
-          <div className="float-card fc-2">
-            <span className="fc-emoji">✅</span>
-            <div><strong>Request accepted</strong><small>Acoustic Guitar Basics</small></div>
-          </div>
-          <div className="float-card fc-3">
-            <span className="fc-emoji">⭐</span>
-            <div><strong>4.9 / 5</strong><small>average mentor rating</small></div>
-          </div>
-          <div className="orb" />
-        </div>
+        <ProductPreview />
       </section>
 
-      <section className="section">
-        <h2 className="section-title">Everything you need to grow together</h2>
-        <div className="feature-grid">
-          {FEATURES.map(([icon, title, text]) => (
-            <article key={title} className="feature">
-              <span className="feature-icon">{icon}</span>
+      <section className="section" id="how">
+        <h2>How it works</h2>
+        <ol className="steps">
+          {STEPS.map(([title, text], i) => (
+            <li key={title}>
+              <span className="step-num">{i + 1}</span>
               <h3>{title}</h3>
               <p className="muted">{text}</p>
-            </article>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
 
-      <section className="section">
-        <h2 className="section-title">Explore by category</h2>
-        <div className="chip-cloud">
+      <section className="section" id="categories">
+        <h2>Categories</h2>
+        <div className="landing-cats">
           {CATEGORIES.map((c) => (
-            <span key={c.key} className={`tag tag-lg tint-${c.tint}`}>
-              {c.emoji} {c.name}
-            </span>
+            <div key={c.key} className="landing-cat">
+              <span className="cat-icon" style={{ color: c.color }}><Icon name={c.icon} size={18} /></span>
+              <div>
+                <strong>{c.name}</strong>
+                <span className="muted">{counts[c.key]} skills</span>
+              </div>
+            </div>
           ))}
         </div>
       </section>
 
-      <section className="cta-band">
-        <h2>Ready to swap skills?</h2>
-        <p>Jump in with a demo account: no setup needed.</p>
-        <Link to="/login" className="btn btn-light btn-lg">Open the demo</Link>
-      </section>
-
-      <footer className="app-footer">
-        <span>© {new Date().getFullYear()} SkillSwap. All rights reserved.</span>
+      <footer className="landing-footer">
+        <span>© {new Date().getFullYear()} SkillSwap</span>
+        <span className="muted">Corporate Knowledge Exchange Portal</span>
       </footer>
     </div>
   );

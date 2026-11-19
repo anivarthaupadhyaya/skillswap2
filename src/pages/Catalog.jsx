@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Link, Redirect } from '../router';
+import { Link, navigate, Redirect } from '../router';
 import { CATEGORIES, categoryByKey } from '../data/seed';
 import { currentUser, fullName, mentorRating, registerForSkill, userById, useStore } from '../data/store';
-import { Avatar, CategoryTag, EmptyState, PageHeader, Stars, useToast } from '../components/ui';
+import { Avatar, CategoryTag, EmptyState, Icon, PageHeader, useToast } from '../components/ui';
 
 export default function Catalog({ params }) {
   const s = useStore();
@@ -17,32 +17,40 @@ export default function Catalog({ params }) {
   const skills = s.skills.filter((k) => (!cat || k.categories.includes(cat.key)) && matches(k));
   const myReq = (skillId) => s.requests.find((r) => r.menteeId === me.id && r.skillId === skillId && r.status !== 'DECLINED');
 
-  const search = (
-    <label className="search">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-        <circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" />
-      </svg>
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search skills…" aria-label="Search skills" />
-    </label>
+  const toolbar = (
+    <div className="toolbar">
+      <label className="search">
+        <Icon name="search" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search skills" aria-label="Search skills" />
+      </label>
+      <select
+        className="select-sm"
+        value={cat?.key || ''}
+        onChange={(e) => navigate(e.target.value ? `/skills/${e.target.value}` : '/skills')}
+        aria-label="Category"
+      >
+        <option value="">All categories</option>
+        {CATEGORIES.map((c) => <option key={c.key} value={c.key}>{c.name}</option>)}
+      </select>
+    </div>
   );
 
-  // Category overview (no category picked and no search)
   if (!cat && !query) {
     return (
       <div className="stack-lg">
-        <PageHeader title="Skill Catalog" subtitle="Pick a category to discover skills shared by your colleagues." actions={search} />
+        <PageHeader title="Skill catalog" subtitle={`${s.skills.length} skills offered by colleagues across ${CATEGORIES.length} categories`} />
+        {toolbar}
         <div className="category-grid">
           {CATEGORIES.map((c) => {
             const count = s.skills.filter((k) => k.categories.includes(c.key)).length;
             return (
-              <Link key={c.key} to={`/skills/${c.key}`} className={`category-card tint-${c.tint}`}>
+              <Link key={c.key} to={`/skills/${c.key}`} className="category-card">
                 <div className="category-top">
-                  <span className="category-emoji">{c.emoji}</span>
-                  <span className="count-pill">{count} {count === 1 ? 'skill' : 'skills'}</span>
+                  <span className="cat-icon" style={{ color: c.color }}><Icon name={c.icon} size={18} /></span>
+                  <span className="muted small">{count} {count === 1 ? 'skill' : 'skills'}</span>
                 </div>
                 <h3>{c.name}</h3>
                 <p>{c.description}</p>
-                <span className="category-cta">Open category →</span>
               </Link>
             );
           })}
@@ -53,26 +61,16 @@ export default function Catalog({ params }) {
 
   return (
     <div className="stack-lg">
-      <div>
-        <Link to="/skills" className="back-link">← All categories</Link>
-        <PageHeader
-          title={cat ? `${cat.emoji} ${cat.name}` : `Results for “${q}”`}
-          subtitle={cat ? cat.description : `${skills.length} matching skill${skills.length === 1 ? '' : 's'}`}
-          actions={search}
-        />
-      </div>
-      <div className="cat-tabs" role="tablist">
-        <Link to="/skills" className={!cat ? 'active' : ''}>All</Link>
-        {CATEGORIES.map((c) => (
-          <Link key={c.key} to={`/skills/${c.key}`} className={cat?.key === c.key ? 'active' : ''}>
-            {c.emoji} {c.name.split(' /')[0]}
-          </Link>
-        ))}
-      </div>
+      <PageHeader
+        back={<Link to="/skills" className="back-link"><Icon name="chevronLeft" size={14} /> Skill catalog</Link>}
+        title={cat ? cat.name : 'Search results'}
+        subtitle={cat ? cat.description : `${skills.length} result${skills.length === 1 ? '' : 's'} for “${q}”`}
+      />
+      {toolbar}
 
       {skills.length === 0 ? (
-        <EmptyState icon="🔍" title="This category is empty">
-          {me.role === 'MENTOR' ? <Link to="/sessions/new-skill">Be the first to share a skill here →</Link> : 'Check back soon, mentors add new skills regularly.'}
+        <EmptyState icon="search" title={query ? 'No skills match your search' : 'No skills in this category yet'}>
+          {me.role === 'MENTOR' && <Link to="/sessions/new-skill">Offer a skill</Link>}
         </EmptyState>
       ) : (
         <div className="skill-grid">
@@ -85,39 +83,38 @@ export default function Catalog({ params }) {
               <article key={k.id} className="skill-card">
                 <div className="tags">{k.categories.map((c) => <CategoryTag key={c} k={c} />)}</div>
                 <h3>{k.name}</h3>
-                <p className="muted">{k.description}</p>
-                <div className="mentor-row">
-                  <Avatar user={mentor} size={34} />
+                <p className="skill-desc">{k.description}</p>
+                <div className="skill-mentor">
+                  <Avatar user={mentor} size={28} />
                   <div className="grow">
-                    <strong>{fullName(mentor)}</strong>
-                    <small className="muted">{mentor?.department} · {learners} learner{learners === 1 ? '' : 's'}</small>
+                    <div className="row-title">{fullName(mentor)}</div>
+                    <div className="row-sub">
+                      {mentor?.department}
+                      {rating > 0 && <> · <span className="star-inline">★</span> {rating.toFixed(1)}</>}
+                      {' · '}{learners} learner{learners === 1 ? '' : 's'}
+                    </div>
                   </div>
-                  {rating > 0 && (
-                    <span className="rating-chip" title="Community mentor rating">
-                      <Stars value={rating} size={12} /> {rating.toFixed(1)}
-                    </span>
-                  )}
                 </div>
-                <div className="skill-actions">
+                <div className="skill-foot">
                   {me.role === 'MENTEE' ? (
                     req ? (
-                      <Link to="/sessions" className="btn btn-soft btn-block">✓ Registered · {req.status.toLowerCase()}</Link>
+                      <Link to="/sessions" className="btn btn-secondary btn-sm btn-block">
+                        <Icon name="check" size={14} /> Registered
+                      </Link>
                     ) : (
                       <button
-                        className="btn btn-primary btn-block"
+                        className="btn btn-primary btn-sm btn-block"
                         onClick={() => {
                           registerForSkill(k.id);
-                          toast(`Request sent to ${mentor.firstName}!`);
+                          toast(`Request sent to ${mentor.firstName}`);
                         }}
                       >
-                        Register
+                        Request to learn
                       </button>
                     )
                   ) : k.mentorId === me.id ? (
-                    <Link to={`/sessions/skill/${k.id}`} className="btn btn-soft btn-block">Your skill · view mentees</Link>
-                  ) : (
-                    <span className="muted small center">Offered by a fellow mentor</span>
-                  )}
+                    <Link to={`/sessions/skill/${k.id}`} className="btn btn-secondary btn-sm btn-block">Manage</Link>
+                  ) : null}
                 </div>
               </article>
             );

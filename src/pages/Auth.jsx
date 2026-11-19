@@ -3,22 +3,17 @@ import { Link, navigate } from '../router';
 import { Brand } from '../components/Layout';
 import { login, register } from '../data/store';
 
-function AuthShell({ title, subtitle, children, aside }) {
+function AuthShell({ title, children, footer }) {
   return (
     <div className="auth">
-      <div className="auth-panel">
-        <Brand />
-        <div className="auth-form-wrap">
+      <div className="auth-inner">
+        <div className="auth-brand"><Brand /></div>
+        <div className="auth-card">
           <h1>{title}</h1>
-          <p className="muted">{subtitle}</p>
           {children}
         </div>
+        <p className="auth-footer">{footer}</p>
       </div>
-      <aside className="auth-aside" aria-hidden="true">
-        <div className="auth-quote">
-          {aside}
-        </div>
-      </aside>
     </div>
   );
 }
@@ -40,34 +35,26 @@ export function Login() {
   };
 
   return (
-    <AuthShell
-      title="Welcome back"
-      subtitle="Log in to continue your learning journey."
-      aside={<><p>“I learned guitar from a colleague two floors up. Best thing our company ever launched.”</p><span>Alex M. · Product</span></>}
-    >
-      <div className="demo-box">
-        <span className="demo-label">Quick demo login</span>
-        <div className="demo-buttons">
-          <button type="button" className="btn btn-outline" onClick={() => demo('mentee')}>🎓 As a Mentee</button>
-          <button type="button" className="btn btn-outline" onClick={() => demo('mentor')}>🧑‍🏫 As a Mentor</button>
-        </div>
-      </div>
-      <div className="divider"><span>or use email</span></div>
+    <AuthShell title="Sign in" footer={<>Don't have an account? <Link to="/register">Create one</Link></>}>
       <form onSubmit={submit} className="form">
         {error && <div className="alert alert-bad">{error}</div>}
         <label className="field">
-          <span>Email</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" required autoComplete="email" />
+          <span>Work email</span>
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" autoFocus />
         </label>
         <label className="field">
           <span>Password</span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="current-password" />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
         </label>
-        <button className="btn btn-primary btn-block btn-lg" type="submit">Log in</button>
+        <button className="btn btn-primary btn-block" type="submit">Sign in</button>
       </form>
-      <p className="auth-switch">
-        New to SkillSwap? <Link to="/register">Create an account</Link>
-      </p>
+      <div className="demo-note">
+        <p><strong>Demo accounts</strong>: password <code>demo123</code></p>
+        <div className="demo-actions">
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => demo('mentee')}>Continue as mentee</button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={() => demo('mentor')}>Continue as mentor</button>
+        </div>
+      </div>
     </AuthShell>
   );
 }
@@ -86,11 +73,7 @@ export function Register() {
   };
 
   return (
-    <AuthShell
-      title="Create your account"
-      subtitle="Join your colleagues and start swapping skills."
-      aside={<><p>“Teaching chess to the data team made me a better mentor and a better player.”</p><span>Sara K. · Data</span></>}
-    >
+    <AuthShell title="Create your account" footer={<>Already have an account? <Link to="/login">Sign in</Link></>}>
       <form onSubmit={submit} className="form">
         {error && <div className="alert alert-bad">{error}</div>}
         <div className="form-row">
@@ -98,29 +81,23 @@ export function Register() {
           <label className="field"><span>Last name</span><input value={form.lastName} onChange={set('lastName')} required /></label>
         </div>
         <label className="field"><span>Work email</span><input type="email" value={form.email} onChange={set('email')} required autoComplete="email" /></label>
-        <label className="field"><span>Password</span><input type="password" value={form.password} onChange={set('password')} required autoComplete="new-password" placeholder="At least 6 characters" /></label>
-        <label className="field"><span>Department</span><input value={form.department} onChange={set('department')} required placeholder="e.g. Engineering" /></label>
-        <div className="field">
-          <span>I want to join as</span>
-          <div className="role-pick">
-            {[
-              ['MENTEE', '🎓', 'Mentee', 'Learn new skills'],
-              ['MENTOR', '🧑‍🏫', 'Mentor', 'Share your expertise']
-            ].map(([value, icon, label, hint]) => (
-              <label key={value} className={`role-option ${form.role === value ? 'selected' : ''}`}>
-                <input type="radio" name="role" value={value} checked={form.role === value} onChange={set('role')} />
-                <span className="role-icon">{icon}</span>
-                <strong>{label}</strong>
-                <small className="muted">{hint}</small>
-              </label>
-            ))}
-          </div>
+        <label className="field">
+          <span>Password</span>
+          <input type="password" value={form.password} onChange={set('password')} required autoComplete="new-password" />
+          <small className="muted">At least 6 characters.</small>
+        </label>
+        <div className="form-row">
+          <label className="field"><span>Department</span><input value={form.department} onChange={set('department')} required /></label>
+          <label className="field">
+            <span>Role</span>
+            <select value={form.role} onChange={set('role')}>
+              <option value="MENTEE">Mentee</option>
+              <option value="MENTOR">Mentor</option>
+            </select>
+          </label>
         </div>
-        <button className="btn btn-primary btn-block btn-lg" type="submit">Create account</button>
+        <button className="btn btn-primary btn-block" type="submit">Create account</button>
       </form>
-      <p className="auth-switch">
-        Already have an account? <Link to="/login">Log in</Link>
-      </p>
     </AuthShell>
   );
 }

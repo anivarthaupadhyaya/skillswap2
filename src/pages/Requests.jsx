@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import { Link } from '../router';
 import { currentUser, fullName, respondToRequest, skillById, userById, useStore } from '../data/store';
-import { Avatar, EmptyState, fmtDate, PageHeader, StatusPill, useToast } from '../components/ui';
+import { Avatar, EmptyState, fmtDate, Icon, PageHeader, StatusPill, useToast } from '../components/ui';
 
-const FILTERS = ['ALL', 'PROPOSED', 'ACCEPTED', 'COMPLETED', 'DECLINED'];
+const FILTERS = [
+  ['ALL', 'All'],
+  ['PROPOSED', 'Pending'],
+  ['ACCEPTED', 'Accepted'],
+  ['COMPLETED', 'Completed'],
+  ['DECLINED', 'Declined']
+];
 
 export default function Requests() {
   const s = useStore();
@@ -20,67 +26,84 @@ export default function Requests() {
   return (
     <div className="stack-lg">
       <PageHeader
-        title="My Requests"
-        subtitle={isMentor ? 'Requests from colleagues who want to learn from you.' : 'Skills you asked to learn and their status.'}
-        actions={!isMentor && <Link to="/skills" className="btn btn-primary">+ New request</Link>}
+        title="Requests"
+        subtitle={isMentor ? 'Colleagues who asked to learn from you' : 'Skills you asked to learn'}
+        actions={!isMentor && <Link to="/skills" className="btn btn-primary"><Icon name="plus" /> New request</Link>}
       />
-      <div className="seg-tabs" role="tablist">
-        {FILTERS.map((f) => {
+
+      <div className="tabs" role="tablist">
+        {FILTERS.map(([f, label]) => {
           const n = f === 'ALL' ? all.length : all.filter((r) => r.status === f).length;
           return (
             <button key={f} role="tab" aria-selected={filter === f} className={filter === f ? 'active' : ''} onClick={() => setFilter(f)}>
-              {f === 'ALL' ? 'All' : f.charAt(0) + f.slice(1).toLowerCase()} <span className="tab-count">{n}</span>
+              {label} <span className="tab-count">{n}</span>
             </button>
           );
         })}
       </div>
 
       {list.length === 0 ? (
-        <EmptyState icon="📋" title="No requests here">
-          {!isMentor && <Link to="/skills">Browse the catalog to create a new request →</Link>}
+        <EmptyState icon="file" title="No requests">
+          {!isMentor && <Link to="/skills">Browse the catalog</Link>}
         </EmptyState>
       ) : (
-        <div className="request-list">
-          {list.map((r) => {
-            const other = userById(s, isMentor ? r.menteeId : r.mentorId);
-            const skill = skillById(s, r.skillId);
-            const canChat = ['ACCEPTED', 'COMPLETED'].includes(r.status);
-            return (
-              <article key={r.id} className="request-card">
-                <Avatar user={other} size={44} />
-                <div className="grow">
-                  <div className="row gap-sm wrap">
-                    <h3>{skill?.name || 'Deleted skill'}</h3>
-                    <StatusPill status={r.status} />
-                  </div>
-                  <small className="muted">
-                    {isMentor ? 'Mentee' : 'Mentor'}: <strong>{fullName(other)}</strong> · {other?.department} · {fmtDate(r.requestedAt)}
-                  </small>
-                  {r.message && <p className="quote">“{r.message}”</p>}
-                  {!isMentor && (
-                    <small className="muted">
-                      {r.status === 'PROPOSED' && 'Request sent to mentor. Waiting for a response.'}
-                      {r.status === 'ACCEPTED' && 'Accepted by mentor. Check Sessions for your slot.'}
-                      {r.status === 'DECLINED' && `Declined by mentor${r.declineReason ? `: ${r.declineReason}` : '.'}`}
-                      {r.status === 'COMPLETED' && 'Completed. Thanks for learning!'}
-                    </small>
-                  )}
-                </div>
-                <div className="request-actions">
-                  {isMentor && r.status === 'PROPOSED' && (
-                    <>
-                      <button className="btn btn-primary" onClick={() => { respondToRequest(r.id, true); toast('Request accepted'); }}>Accept</button>
-                      <button className="btn btn-danger-soft" onClick={() => { respondToRequest(r.id, false); toast('Request declined', 'bad'); }}>Decline</button>
-                    </>
-                  )}
-                  {canChat && <Link to={`/requests/${r.id}/chat`} className="btn btn-outline">💬 Chat</Link>}
-                  {isMentor && r.status === 'ACCEPTED' && skill && (
-                    <Link to={`/sessions/skill/${skill.id}`} className="btn btn-soft">📅 Book slot</Link>
-                  )}
-                </div>
-              </article>
-            );
-          })}
+        <div className="table-wrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Skill</th>
+                <th>{isMentor ? 'Mentee' : 'Mentor'}</th>
+                <th>Requested</th>
+                <th>Status</th>
+                <th className="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((r) => {
+                const other = userById(s, isMentor ? r.menteeId : r.mentorId);
+                const skill = skillById(s, r.skillId);
+                const canChat = ['ACCEPTED', 'COMPLETED'].includes(r.status);
+                return (
+                  <tr key={r.id}>
+                    <td data-label="Skill">
+                      <div className="cell-title">{skill?.name || 'Deleted skill'}</div>
+                      {r.message && <div className="cell-sub" title={r.message}>{r.message}</div>}
+                    </td>
+                    <td data-label={isMentor ? 'Mentee' : 'Mentor'}>
+                      <div className="person">
+                        <Avatar user={other} size={26} />
+                        <div>
+                          <div className="cell-title">{fullName(other)}</div>
+                          <div className="cell-sub">{other?.department}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td data-label="Requested" className="nowrap muted">{fmtDate(r.requestedAt)}</td>
+                    <td data-label="Status"><StatusPill status={r.status} /></td>
+                    <td className="right">
+                      <div className="cell-actions">
+                        {isMentor && r.status === 'PROPOSED' && (
+                          <>
+                            <button className="btn btn-primary btn-sm" onClick={() => { respondToRequest(r.id, true); toast('Request accepted'); }}>Accept</button>
+                            <button className="btn btn-secondary btn-sm" onClick={() => { respondToRequest(r.id, false); toast('Request declined', 'bad'); }}>Decline</button>
+                          </>
+                        )}
+                        {isMentor && r.status === 'ACCEPTED' && skill && (
+                          <Link to={`/sessions/skill/${skill.id}`} className="btn btn-secondary btn-sm">Schedule</Link>
+                        )}
+                        {canChat && (
+                          <Link to={`/requests/${r.id}/chat`} className="btn btn-ghost btn-sm" aria-label="Open chat">
+                            <Icon name="message" size={15} /> Chat
+                          </Link>
+                        )}
+                        {!isMentor && r.status === 'PROPOSED' && <span className="muted small">Waiting for mentor</span>}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

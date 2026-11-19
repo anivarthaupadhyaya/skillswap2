@@ -5,64 +5,64 @@ export const CATEGORIES = [
   {
     key: 'PHYSICAL_FITNESS',
     name: 'Physical / Fitness',
-    emoji: '🏃',
-    tint: 'coral',
+    icon: 'activity',
+    color: '#c2410c',
     description:
       'Activities involving body movement, strength, endurance, or coordination like gym workouts, sports, yoga, running, martial arts, and dancing.'
   },
   {
     key: 'CREATIVE_ARTISTIC',
     name: 'Creative / Artistic',
-    emoji: '🎨',
-    tint: 'pink',
+    icon: 'pen',
+    color: '#be185d',
     description:
       'Hobbies focused on creating or expressing ideas through music, art, writing, design, filmmaking, photography, or any imaginative activity.'
   },
   {
     key: 'INTELLECTUAL_LEARNING',
     name: 'Intellectual / Learning',
-    emoji: '🧠',
-    tint: 'indigo',
+    icon: 'book',
+    color: '#3b5bdb',
     description:
       'Activities that stimulate thinking and knowledge growth like reading, coding, problem-solving, studying subjects, puzzles, strategy games, and research.'
   },
   {
     key: 'SOCIAL_CONNECTION',
     name: 'Social / Connection',
-    emoji: '🤝',
-    tint: 'amber',
+    icon: 'users',
+    color: '#b45309',
     description:
       'Hobbies involving interaction with others such as group activities, networking, clubs, events, conversations, team sports, and building relationships.'
   },
   {
     key: 'RELAXATION_PASSIVE',
     name: 'Relaxation / Passive',
-    emoji: '🎧',
-    tint: 'sky',
+    icon: 'coffee',
+    color: '#0369a1',
     description:
       'Low-effort activities meant for relaxation and enjoyment like watching movies, listening to music, casual gaming, or simply unwinding.'
   },
   {
     key: 'SPIRITUAL_INNER_GROWTH',
     name: 'Spiritual / Inner Growth',
-    emoji: '🧘',
-    tint: 'violet',
+    icon: 'sun',
+    color: '#6d28d9',
     description:
       'Practices that improve inner peace and self-awareness such as meditation, mindfulness, reflection, philosophy, and connecting with deeper purpose.'
   },
   {
     key: 'EXPLORATION_ADVENTURE',
     name: 'Exploration / Adventure',
-    emoji: '🧭',
-    tint: 'green',
+    icon: 'compass',
+    color: '#15803d',
     description:
       'Activities involving new experiences and environments like traveling, hiking, camping, road trips, discovering places, and stepping outside comfort zones.'
   },
   {
     key: 'COLLECTION_BUILDING',
     name: 'Collection / Building',
-    emoji: '🧩',
-    tint: 'teal',
+    icon: 'box',
+    color: '#0f766e',
     description:
       'Hobbies centered on making, assembling or curating things such as model kits, LEGO, woodworking, electronics, and collecting.'
   }
@@ -129,7 +129,7 @@ export function createSeed() {
   const messages = [
     { id: 1, requestId: 1, senderId: 1, text: 'Hi Priya! Thanks for accepting. Do I need a yoga mat?', sentAt: iso(-8, 10, 2) },
     { id: 2, requestId: 1, senderId: 2, text: 'Hi Alex! A mat helps, but a towel on carpet works for the first session too.', sentAt: iso(-8, 10, 20) },
-    { id: 3, requestId: 1, senderId: 1, text: 'Perfect, see you on the scheduled day 🙌', sentAt: iso(-8, 10, 25) },
+    { id: 3, requestId: 1, senderId: 1, text: 'Perfect, see you on the scheduled day.', sentAt: iso(-8, 10, 25) },
     { id: 4, requestId: 2, senderId: 3, text: 'Welcome aboard! Which guitar do you have, acoustic or classical?', sentAt: iso(-5, 12, 0) },
     { id: 5, requestId: 6, senderId: 8, text: 'Is video okay for the first session?', sentAt: iso(-4, 9, 0) },
     { id: 6, requestId: 6, senderId: 2, text: 'Absolutely, I have proposed a video slot.', sentAt: iso(-4, 9, 30) }

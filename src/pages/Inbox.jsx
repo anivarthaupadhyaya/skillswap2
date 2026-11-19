@@ -1,11 +1,11 @@
 import { Link, navigate } from '../router';
 import { currentUser, fullName, markAllRead, markRead, userById, useStore } from '../data/store';
-import { Avatar, EmptyState, fmtDate, PageHeader, Stars, timeAgo } from '../components/ui';
+import { Avatar, EmptyState, fmtDate, Icon, PageHeader, Stars, timeAgo } from '../components/ui';
 
 const ICON = {
-  REQUEST_RECEIVED: '📥', REQUEST_SENT: '📤', REQUEST_ACCEPTED: '✅', REQUEST_DECLINED: '❌',
-  SKILL_CREATED: '📚', CHAT_RECEIVED: '💬', SESSION_SCHEDULED: '📅', SESSION_UPDATED: '🗓',
-  SESSION_COMPLETED: '🏁', FEEDBACK_RECEIVED: '⭐', SYSTEM_ALERT: '🔔'
+  REQUEST_RECEIVED: 'inbox', REQUEST_SENT: 'send', REQUEST_ACCEPTED: 'check', REQUEST_DECLINED: 'x',
+  SKILL_CREATED: 'book', CHAT_RECEIVED: 'message', SESSION_SCHEDULED: 'calendar', SESSION_UPDATED: 'clock',
+  SESSION_COMPLETED: 'flag', FEEDBACK_RECEIVED: 'star', SYSTEM_ALERT: 'info'
 };
 
 export function Notifications() {
@@ -18,13 +18,13 @@ export function Notifications() {
     <div className="narrow stack-lg">
       <PageHeader
         title="Notifications"
-        subtitle={unread ? `You have ${unread} unread notification${unread > 1 ? 's' : ''}.` : 'You are all caught up.'}
-        actions={unread > 0 && <button className="btn btn-outline" onClick={markAllRead}>Mark all as read</button>}
+        subtitle={unread ? `${unread} unread` : 'All caught up'}
+        actions={unread > 0 && <button className="btn btn-secondary" onClick={markAllRead}>Mark all as read</button>}
       />
       {list.length === 0 ? (
-        <EmptyState icon="🔔" title="No notifications yet" />
+        <EmptyState icon="bell" title="No notifications" />
       ) : (
-        <div className="notif-list">
+        <div className="panel flush">
           {list.map((n) => (
             <button
               key={n.id}
@@ -34,13 +34,13 @@ export function Notifications() {
                 if (n.link) navigate(n.link);
               }}
             >
-              <span className="notif-icon">{ICON[n.type] || '🔔'}</span>
+              <span className="notif-icon"><Icon name={ICON[n.type] || 'info'} size={16} /></span>
               <span className="grow">
-                <strong>{n.title}</strong>
-                <span className="muted">{n.message}</span>
+                <span className="row-title">{n.title}</span>
+                <span className="row-sub">{n.message}</span>
               </span>
-              <small className="muted nowrap">{timeAgo(n.createdAt)}</small>
-              {!n.read && <span className="dot dot-on" aria-label="unread" />}
+              <span className="row-meta">{timeAgo(n.createdAt)}</span>
+              <span className={`unread-dot ${n.read ? '' : 'on'}`} aria-label={n.read ? undefined : 'Unread'} />
             </button>
           ))}
         </div>
@@ -58,56 +58,55 @@ export function Feedback() {
 
   return (
     <div className="stack-lg">
-      <PageHeader title="My Feedback" subtitle="What your colleagues are saying about sessions with you." />
+      <PageHeader title="Feedback" subtitle="Ratings and comments from your sessions" />
       {list.length === 0 ? (
-        <EmptyState icon="⭐" title="No feedback received yet">
-          {me.role === 'MENTOR' ? 'Complete sessions with mentees to start receiving ratings.' : 'Mentors will leave feedback after your sessions.'}
-          {' '}<Link to="/sessions">Go to sessions →</Link>
+        <EmptyState icon="star" title="No feedback yet">
+          {me.role === 'MENTOR' ? 'Ratings appear here after mentees complete sessions with you.' : 'Mentors can leave feedback after your sessions.'}{' '}
+          <Link to="/sessions">Go to sessions</Link>
         </EmptyState>
       ) : (
         <>
-          <section className="feedback-summary card">
+          <section className="panel feedback-summary">
             <div className="big-rating">
-              <strong>{avg('rating').toFixed(2)}</strong>
-              <Stars value={avg('rating')} size={20} />
-              <small className="muted">{list.length} review{list.length > 1 ? 's' : ''}</small>
+              <strong>{avg('rating').toFixed(1)}</strong>
+              <Stars value={avg('rating')} size={16} />
+              <span className="muted small">{list.length} review{list.length > 1 ? 's' : ''}</span>
             </div>
             <div className="dist">
               {dist.map(([star, n]) => (
                 <div key={star} className="dist-row">
-                  <span>{star}★</span>
+                  <span>{star}</span>
                   <div className="bar"><div style={{ width: `${(n / list.length) * 100}%` }} /></div>
                   <span className="muted">{n}</span>
                 </div>
               ))}
             </div>
-            <div className="sub-ratings">
-              <div><span className="muted small">Skill development</span><strong>{avg('skillDev').toFixed(1)} / 5</strong></div>
-              <div><span className="muted small">Communication</span><strong>{avg('comm').toFixed(1)} / 5</strong></div>
-            </div>
+            <dl className="sub-ratings">
+              <div><dt>Skill development</dt><dd>{avg('skillDev').toFixed(1)}</dd></div>
+              <div><dt>Communication</dt><dd>{avg('comm').toFixed(1)}</dd></div>
+            </dl>
           </section>
-          <div className="feedback-grid">
+          <section className="panel flush">
             {list.map((f) => {
               const by = userById(s, f.givenBy);
               return (
-                <article key={f.id} className="card feedback-card">
-                  <div className="row gap-sm">
-                    <Avatar user={by} />
-                    <div className="grow">
-                      <strong>{fullName(by)}</strong>
-                      <small className="muted">{fmtDate(f.date)}</small>
+                <article key={f.id} className="review">
+                  <Avatar user={by} size={32} />
+                  <div className="grow">
+                    <div className="review-head">
+                      <span className="row-title">{fullName(by)}</span>
+                      <Stars value={f.rating} size={13} />
+                      <span className="row-meta">{fmtDate(f.date)}</span>
                     </div>
-                    <Stars value={f.rating} />
-                  </div>
-                  <p>“{f.comment}”</p>
-                  <div className="row gap-sm wrap">
-                    <span className="tag">Skill development · {f.skillDev}/5</span>
-                    <span className="tag">Communication · {f.comm}/5</span>
+                    <p>{f.comment}</p>
+                    <div className="review-meta">
+                      Skill development {f.skillDev}/5 · Communication {f.comm}/5
+                    </div>
                   </div>
                 </article>
               );
             })}
-          </div>
+          </section>
         </>
       )}
     </div>
@@ -116,9 +115,9 @@ export function Feedback() {
 
 export function NotFound() {
   return (
-    <div className="narrow">
-      <EmptyState icon="🧭" title="Page not found">
-        <Link to="/">Go back home →</Link>
+    <div className="narrow" style={{ paddingTop: '4rem' }}>
+      <EmptyState icon="compass" title="Page not found">
+        <Link to="/">Go to the home page</Link>
       </EmptyState>
     </div>
   );
